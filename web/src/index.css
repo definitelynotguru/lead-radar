@@ -100,15 +100,14 @@ a {
   padding: 0 8px 28px;
 }
 .brand-mark {
-  width: 38px;
-  height: 38px;
-  border-radius: 13px;
-  display: grid;
-  place-items: center;
-  color: var(--accent-ink);
-  background: linear-gradient(135deg, var(--accent-strong), #6f9f90);
-  font-weight: 600;
-  letter-spacing: -0.04em;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(227, 226, 218, 0.1);
+  border-radius: 14px;
+  display: block;
+  background: var(--bg);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.26);
 }
 .brand-name {
   font-weight: 600;

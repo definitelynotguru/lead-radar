@@ -55,7 +55,13 @@ export function Sidebar({ live, endpoint, counts }: SidebarProps) {
   return (
     <aside className="sidebar">
       <div className="brand">
-        <div className="brand-mark">lr</div>
+        <img
+          className="brand-mark"
+          src={`${import.meta.env.BASE_URL}logo-mark.webp`}
+          alt=""
+          width="40"
+          height="40"
+        />
         <div>
           <div className="brand-name">Lead Radar</div>
           <div className="brand-sub">zero-cost monitor</div>

@@ -1,4 +1,8 @@
-# lead-radar
+<p align="center">
+  <img src="web/public/logo-mark.webp" width="112" alt="Lead Radar logo">
+</p>
+
+# Lead Radar
 
 Zero-cost lead monitoring for exactly three sources: HN Who's Hiring, GitHub issues labeled `bounty`, and Remotive
 remote jobs. It ingests official API responses into Postgres, queues Discord alerts durably, exposes source health, and
