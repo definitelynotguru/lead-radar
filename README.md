@@ -11,6 +11,18 @@ renders a static owner dashboard.
 This is a polished portfolio demo, not a claim of production-grade always-on operations. It is designed for **$0/month
 recurring cost** within documented free tiers.
 
+<p align="center">
+  <video src="https://github.com/definitelynotguru/lead-radar/releases/download/demo-v1/lead-radar-demo.mp4"
+         poster="https://github.com/definitelynotguru/lead-radar/releases/download/demo-v1/lead-radar-demo-poster.png"
+         controls muted playsinline preload="metadata" width="960"></video>
+</p>
+
+<p align="center">
+  <a href="https://github.com/definitelynotguru/lead-radar/releases/download/demo-v1/lead-radar-demo.mp4">Watch the 43-second product demo</a>
+  ·
+  <a href="https://github.com/definitelynotguru/lead-radar/releases/tag/demo-v1">Open the demo release</a>
+</p>
+
 <table>
   <tr>
     <td><img src="docs/dashboard-live-overview.png" width="320" alt="Live lead-radar overview"></td>
