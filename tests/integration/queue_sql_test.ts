@@ -107,6 +107,15 @@ Deno.test("Postgres queue semantics survive duplicates, retries, crashes, and ou
       assertEquals(finalRows[0].status, "dead_lettered");
       assertEquals(finalRows[0].dead_count, 1);
       assertEquals(finalRows[0].attempt_count, 2);
+
+      const requeued = await sql<Array<{ status: string }>>`
+        select status::text from requeue_job(${jobId}::uuid, 0, true)
+      `;
+      assertEquals(requeued[0].status, "pending");
+      const remainingDeadRows = await sql<Array<{ count: number }>>`
+        select count(*)::integer as count from dead_letters where job_id = ${jobId}::uuid
+      `;
+      assertEquals(remainingDeadRows[0].count, 0);
     });
 
     await t.step("an expired worker lease becomes ambiguous instead of being blindly reposted", async () => {

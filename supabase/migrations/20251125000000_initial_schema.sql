@@ -607,6 +607,9 @@ begin
     raise exception 'job % is not requeueable', p_job_id;
   end if;
 
+  delete from dead_letters
+  where job_id = p_job_id;
+
   return v_result;
 end;
 $$;
