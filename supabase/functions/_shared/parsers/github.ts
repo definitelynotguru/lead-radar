@@ -55,6 +55,8 @@ export function parseGitHubIssue(item: GitHubSearchItem): NormalizedLead | null 
   const repo = repositoryName(item.repository_url);
   const labels = labelNames(item.labels);
   if (!labels.some((label) => label.toLowerCase() === "bounty")) return null;
+  const postedAt = new Date(item.created_at);
+  if (Number.isNaN(postedAt.getTime())) return null;
   const body = item.body ?? "";
   const bounty = extractBountyAmount(`${item.title}\n${body}`);
 
@@ -79,7 +81,7 @@ export function parseGitHubIssue(item: GitHubSearchItem): NormalizedLead | null 
     description: body,
     tags: labels.slice(0, 12),
     remote: null,
-    posted_at: new Date(item.created_at).toISOString(),
+    posted_at: postedAt.toISOString(),
     metadata,
   };
 }

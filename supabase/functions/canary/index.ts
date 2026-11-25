@@ -151,7 +151,7 @@ serveEntrypoint(async (request) => {
 
   const env = readRuntimeEnv();
   const authorized = hasValidSharedSecret(request, env.canarySecret, "x-lead-radar-secret");
-  if (!authorized && !(env.allowInsecureLocal && !env.canarySecret)) {
+  if (!authorized) {
     return jsonResponse({ error: "unauthorized" }, 401);
   }
   if (!env.databaseUrl) {

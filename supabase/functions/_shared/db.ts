@@ -30,6 +30,5 @@ export function readRuntimeEnv(): RuntimeEnv {
     dashboardAccessToken: Deno.env.get("DASHBOARD_ACCESS_TOKEN") ?? undefined,
     healthchecksPingUrl: Deno.env.get("HEALTHCHECKS_PING_URL") ?? undefined,
     healthchecksCanaryPingUrl: Deno.env.get("HEALTHCHECKS_CANARY_PING_URL") ?? undefined,
-    allowInsecureLocal: Deno.env.get("ALLOW_INSECURE_LOCAL") === "true",
   };
 }

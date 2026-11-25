@@ -1,5 +1,10 @@
 import { assert, assertEquals, assertMatch } from "jsr:@std/assert@1";
-import { type HnItem, isWhoHiringThread, parseHnComments } from "../../supabase/functions/_shared/parsers/hn.ts";
+import {
+  type HnItem,
+  isWhoHiringThread,
+  parseHnComment,
+  parseHnComments,
+} from "../../supabase/functions/_shared/parsers/hn.ts";
 import {
   type GitHubSearchResponse,
   parseGitHubSearchResponse,
@@ -25,6 +30,21 @@ Deno.test("HN parser handles real Who's Hiring comments", async () => {
   assert(!leads[0].description.includes("equityHey folks"));
   assert(!leads[0].description.includes("&#x2F;"));
   assertEquals(leads[0].metadata.hn_thread_id, 50338728);
+});
+
+Deno.test("HN parser drops deleted, dead, non-comment, and textless items", () => {
+  const live = {
+    id: 1,
+    type: "comment",
+    time: 1_700_000_000,
+    text: "Example | Remote | $100k<br/>TypeScript role",
+  } satisfies HnItem;
+
+  assert(parseHnComment(live) !== null);
+  assertEquals(parseHnComment({ ...live, deleted: true }), null);
+  assertEquals(parseHnComment({ ...live, dead: true }), null);
+  assertEquals(parseHnComment({ ...live, type: "story" }), null);
+  assertEquals(parseHnComment({ ...live, text: undefined }), null);
 });
 
 Deno.test("HN thread recognizer accepts hiring and rejects wants-to-be-hired titles", async () => {
@@ -61,4 +81,26 @@ Deno.test("Remotive parser handles a real API response and retains attribution",
   assertEquals(leads[0].remote, true);
   assert(String(leads[0].metadata.attribution).includes("Remotive"));
   assert(!leads[0].description.includes("<p"));
+});
+
+Deno.test("GitHub and Remotive parsers drop malformed dates instead of poisoning a batch", async () => {
+  const github = await readFixture<GitHubSearchResponse>("tests/fixtures/github/search-issues-bounty.json");
+  const malformedGithub = {
+    ...github,
+    items: [
+      { ...github.items![0], created_at: "not-a-date" },
+      ...github.items!.slice(1),
+    ],
+  };
+  assertEquals(parseGitHubSearchResponse(malformedGithub).length, (github.items?.length ?? 0) - 1);
+
+  const remotive = await readFixture<RemotiveResponse>("tests/fixtures/remotive/remote-jobs.json");
+  const malformedRemotive = {
+    ...remotive,
+    jobs: [
+      { ...remotive.jobs![0], publication_date: "not-a-date" },
+      ...remotive.jobs!.slice(1),
+    ],
+  };
+  assertEquals(parseRemotiveResponse(malformedRemotive).length, 1);
 });

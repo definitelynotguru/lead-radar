@@ -59,3 +59,22 @@ select cron.schedule(
   $$
 )
 where not exists (select 1 from cron.job where jobname = 'lead-radar-cron-log-cleanup');
+
+select cron.schedule(
+  'lead-radar-operational-retention',
+  '23 3 * * *',
+  $$
+  delete from fetch_runs
+  where started_at < now() - interval '30 days';
+
+  delete from canary_runs
+  where started_at < now() - interval '30 days';
+
+  delete from job_attempts ja
+  using jobs j
+  where ja.job_id = j.id
+    and j.status in ('succeeded', 'cancelled')
+    and j.completed_at < now() - interval '30 days';
+  $$
+)
+where not exists (select 1 from cron.job where jobname = 'lead-radar-operational-retention');

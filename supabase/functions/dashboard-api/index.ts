@@ -7,13 +7,33 @@ const APPLICATION_STATUSES = new Set(["applied", "ignored", "replied", "rejected
 
 type Row = Record<string, unknown>;
 
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function isRaisedBusinessRule(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "P0001";
+}
+
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message.slice(0, 800) : "unknown dashboard-api error";
 }
 
 async function snapshot(sql: Sql): Promise<Row> {
   const leads = await sql<Row[]>`
-    select l.*,
+    select l.id,
+           l.source,
+           l.external_id,
+           l.canonical_url,
+           l.title,
+           l.company,
+           l.location,
+           l.salary,
+           left(l.description, 4000) as description,
+           l.tags,
+           l.remote,
+           l.posted_at,
+           l.first_seen_at,
            a.status as application_status,
            a.applied_at,
            a.owner_notes,
@@ -21,7 +41,7 @@ async function snapshot(sql: Sql): Promise<Row> {
     from leads l
     left join applications a on a.lead_id = l.id
     order by l.first_seen_at desc
-    limit 180
+    limit 120
   `;
 
   const postsBySource = await sql<Row[]>`
@@ -164,7 +184,7 @@ async function snapshot(sql: Sql): Promise<Row> {
     },
     meta: {
       demo_mode: false,
-      snapshot_limit: 180,
+      snapshot_limit: 120,
     },
   };
 }
@@ -174,6 +194,7 @@ async function recordAction(sql: Sql, request: Request): Promise<Response> {
   if (!body?.lead_id || !body.status || !APPLICATION_STATUSES.has(body.status)) {
     return corsJsonResponse({ error: "lead_id and a valid status are required" }, 400);
   }
+  if (!isUuid(body.lead_id)) return corsJsonResponse({ error: "lead_id must be a UUID" }, 400);
 
   const rows = await sql<Row[]>`
     select upsert_application_outcome(
@@ -190,6 +211,7 @@ async function recordAction(sql: Sql, request: Request): Promise<Response> {
 async function requeueJob(sql: Sql, request: Request): Promise<Response> {
   const body = await request.json().catch(() => null) as { job_id?: string; reset_attempts?: boolean } | null;
   if (!body?.job_id) return corsJsonResponse({ error: "job_id is required" }, 400);
+  if (!isUuid(body.job_id)) return corsJsonResponse({ error: "job_id must be a UUID" }, 400);
 
   try {
     const rows = await sql<Row[]>`
@@ -198,13 +220,15 @@ async function requeueJob(sql: Sql, request: Request): Promise<Response> {
     `;
     return corsJsonResponse({ ok: true, job: rows[0]?.job ?? null });
   } catch (error) {
-    return corsJsonResponse({ error: errorMessage(error) }, 409);
+    if (isRaisedBusinessRule(error)) return corsJsonResponse({ error: errorMessage(error) }, 409);
+    throw error;
   }
 }
 
 async function acknowledgeJob(sql: Sql, request: Request): Promise<Response> {
   const body = await request.json().catch(() => null) as { job_id?: string } | null;
   if (!body?.job_id) return corsJsonResponse({ error: "job_id is required" }, 400);
+  if (!isUuid(body.job_id)) return corsJsonResponse({ error: "job_id must be a UUID" }, 400);
 
   try {
     const rows = await sql<Row[]>`
@@ -213,7 +237,8 @@ async function acknowledgeJob(sql: Sql, request: Request): Promise<Response> {
     `;
     return corsJsonResponse({ ok: true, job: rows[0]?.job ?? null });
   } catch (error) {
-    return corsJsonResponse({ error: errorMessage(error) }, 409);
+    if (isRaisedBusinessRule(error)) return corsJsonResponse({ error: errorMessage(error) }, 409);
+    throw error;
   }
 }
 
@@ -228,10 +253,10 @@ serveEntrypoint(async (request) => {
   }
 
   const env = readRuntimeEnv();
-  if (!env.databaseUrl) return corsJsonResponse({ error: "LEAD_RADAR_DATABASE_URL is not configured" }, 500);
   if (!hasValidBearerToken(request, env.dashboardAccessToken)) {
     return corsJsonResponse({ error: "unauthorized" }, 401);
   }
+  if (!env.databaseUrl) return corsJsonResponse({ error: "LEAD_RADAR_DATABASE_URL is not configured" }, 500);
 
   const sql = createDatabase(env.databaseUrl);
   try {

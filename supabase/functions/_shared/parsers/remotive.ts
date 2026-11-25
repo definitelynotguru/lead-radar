@@ -27,6 +27,8 @@ export interface RemotiveResponse {
 
 export function parseRemotiveJob(job: RemotiveJob, legalNotice?: string): NormalizedLead | null {
   if (!job.id || !job.url || !job.title) return null;
+  const postedAt = job.publication_date ? new Date(job.publication_date) : null;
+  if (postedAt && Number.isNaN(postedAt.getTime())) return null;
   const description = htmlToText(job.description ?? "");
   const metadata: JsonObject = {
     remotive_job_id: job.id,
@@ -47,7 +49,7 @@ export function parseRemotiveJob(job: RemotiveJob, legalNotice?: string): Normal
     description,
     tags: (job.tags ?? []).slice(0, 12),
     remote: true,
-    posted_at: job.publication_date ? new Date(job.publication_date).toISOString() : null,
+    posted_at: postedAt ? postedAt.toISOString() : null,
     metadata,
   };
 }

@@ -291,6 +291,6 @@ export function buildDemoSnapshot(): DashboardSnapshot {
       ],
       dead_letters: [],
     },
-    meta: { demo_mode: true, snapshot_limit: 180 },
+    meta: { demo_mode: true, snapshot_limit: 120 },
   };
 }

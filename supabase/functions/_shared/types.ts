@@ -68,6 +68,7 @@ export interface IngestionOutput {
   httpStatus?: number;
   diagnostics: JsonObject;
   errors: string[];
+  fatalError?: string;
   lastItemSeenAt?: string | null;
 }
 
@@ -91,5 +92,4 @@ export interface RuntimeEnv {
   dashboardAccessToken?: string;
   healthchecksPingUrl?: string;
   healthchecksCanaryPingUrl?: string;
-  allowInsecureLocal?: boolean;
 }

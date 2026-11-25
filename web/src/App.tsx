@@ -100,8 +100,8 @@ export default function App() {
         if (cancelled) return;
         setError(
           fetchError instanceof Error
-            ? `Live connection failed: ${fetchError.message}. Showing explicit demo data.`
-            : "Live connection failed. Showing explicit demo data.",
+            ? `Live connection failed: ${fetchError.message}. Existing data remains shown; retry the connection to refresh it.`
+            : "Live connection failed. Existing data remains shown; retry the connection to refresh it.",
         );
         setSnapshot((current) =>
           current.meta.demo_mode ? buildDemoSnapshot() : current,

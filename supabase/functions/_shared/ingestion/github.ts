@@ -45,6 +45,9 @@ export async function fetchGitHubIngestion(
       authenticated: Boolean(githubToken),
     },
     errors: [],
+    fatalError: response.data.incomplete_results === true
+      ? "GitHub Search returned incomplete_results=true; treating the truncated page as a fetch failure"
+      : undefined,
     lastItemSeenAt: latestPostedAt,
   };
 }

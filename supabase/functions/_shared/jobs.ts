@@ -10,6 +10,7 @@ export interface JobProcessingSummary {
   retryScheduled: number;
   ambiguous: number;
   deadLettered: number;
+  completionErrors: number;
 }
 
 function errorMessage(error: unknown): string {
@@ -39,6 +40,7 @@ export async function processDueJobs(
     retryScheduled: 0,
     ambiguous: 0,
     deadLettered: 0,
+    completionErrors: 0,
   };
 
   for (const job of jobs) {
@@ -64,17 +66,23 @@ export async function processDueJobs(
       ? nextRetryAt(job.attempts, job.idempotency_key, retryAfterSeconds)
       : null;
 
-    await sql`
-      select complete_job(
-        ${job.id}::uuid,
-        ${workerId},
-        ${outcome},
-        ${error}::text,
-        ${responseStatus}::integer,
-        ${durationMs}::integer,
-        ${nextRun}::timestamptz
-      )
-    `;
+    try {
+      await sql`
+        select complete_job(
+          ${job.id}::uuid,
+          ${workerId},
+          ${outcome},
+          ${error}::text,
+          ${responseStatus}::integer,
+          ${durationMs}::integer,
+          ${nextRun}::timestamptz
+        )
+      `;
+    } catch (completionError) {
+      summary.completionErrors += 1;
+      console.error(`complete_job failed for ${job.id}: ${errorMessage(completionError)}`);
+      continue;
+    }
 
     if (outcome === "success") summary.succeeded += 1;
     if (outcome === "retryable_failure") {

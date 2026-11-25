@@ -15,3 +15,13 @@ Deno.test("GitHub ingestion restricts bounty search to public repositories", asy
   const query = new URL(requestedUrl).searchParams.get("q") ?? "";
   assertEquals(query, "is:issue is:open is:public label:bounty");
 });
+
+Deno.test("GitHub ingestion treats incomplete upstream results as fatal", async () => {
+  const fakeFetch: FetchJsonFn = async <T>(): Promise<{ data: T; status: number }> => {
+    await Promise.resolve();
+    return { data: { total_count: 1, incomplete_results: true, items: [] } as T, status: 200 };
+  };
+
+  const output = await fetchGitHubIngestion({}, fakeFetch);
+  assertEquals(output.fatalError?.includes("incomplete_results=true"), true);
+});

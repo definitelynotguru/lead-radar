@@ -15,7 +15,7 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message.slice(0, 800) : "unknown ingestion error";
 }
 
-function sourceIsDue(state: SourceStateRow, now = new Date()): boolean {
+export function sourceIsDue(state: SourceStateRow, now = new Date()): boolean {
   if (!state.last_run_at) return true;
   const elapsedSeconds = (now.getTime() - new Date(state.last_run_at).getTime()) / 1000;
   return elapsedSeconds + 2 >= state.cadence_seconds;
@@ -67,7 +67,8 @@ export async function runSourceIngestion(
     const currentRunId = runId;
 
     const output = await fetchForSource(source, state, env);
-    const runStatus = output.errors.length > 0 ? "partial" : "success";
+    const runStatus = output.fatalError ? "error" : output.errors.length > 0 ? "partial" : "success";
+    const outputError = [output.fatalError, ...output.errors].filter(Boolean).join("; ").slice(0, 800);
     let inserted = 0;
     let duplicates = 0;
 
@@ -96,7 +97,7 @@ export async function runSourceIngestion(
           ${output.httpStatus ?? null}::integer,
           ${output.rawItemCount}::integer,
           ${inserted}::integer,
-          null::text,
+          ${outputError || null}::text,
           ${tx.json(asPostgresJson(details))},
           ${tx.json(asPostgresJson(output.cursor))},
           ${output.lastItemSeenAt ?? null}::timestamptz
@@ -104,8 +105,12 @@ export async function runSourceIngestion(
       `;
     });
 
-    await maybeAlertSourceRecovery(sql, source, priorFailures);
-    await evaluateQuietAfterSuccess(sql, source);
+    if (runStatus === "error") {
+      await maybeAlertSourceFailure(sql, source, outputError || "ingestion failed");
+    } else {
+      await maybeAlertSourceRecovery(sql, source, priorFailures);
+      await evaluateQuietAfterSuccess(sql, source);
+    }
 
     return {
       source,
@@ -114,7 +119,7 @@ export async function runSourceIngestion(
       itemCount: output.rawItemCount,
       newLeadCount: inserted,
       diagnostics: output.diagnostics,
-      error: output.errors.length > 0 ? output.errors.join("; ").slice(0, 800) : undefined,
+      error: outputError || undefined,
     };
   } catch (error) {
     const message = errorMessage(error);
