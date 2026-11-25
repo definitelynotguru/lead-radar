@@ -225,8 +225,8 @@ say "Edge Functions connect through the shared pooler in transaction mode."
 open_url "https://supabase.com/dashboard/project/$SUPABASE_PROJECT_REF/settings/database"
 step "Open Connect, choose the shared pooler / transaction mode connection string, and copy the full URI."
 step "Replace the password placeholder with the database password before pasting it here."
-ask_secret SUPABASE_DB_URL "SUPABASE_DB_URL:"
-write_env SUPABASE_DB_URL "$SUPABASE_DB_URL"
+ask_secret LEAD_RADAR_DATABASE_URL "LEAD_RADAR_DATABASE_URL:"
+write_env LEAD_RADAR_DATABASE_URL "$LEAD_RADAR_DATABASE_URL"
 
 stage "Alerting: Discord and heartbeat"
 say "Discord receives lead and operational alerts. Healthchecks receives the external dead-man heartbeat."
@@ -262,7 +262,7 @@ if confirm "Run Supabase CLI deployment now?"; then
   npx --yes supabase@latest db push --remote --yes
   npx --yes supabase@latest functions deploy ingest-tick canary dashboard-api --remote --no-verify-jwt
   secret_args=(
-    "SUPABASE_DB_URL=$SUPABASE_DB_URL"
+    "LEAD_RADAR_DATABASE_URL=$LEAD_RADAR_DATABASE_URL"
     "DISCORD_WEBHOOK_URL=$DISCORD_WEBHOOK_URL"
     "INGEST_SHARED_SECRET=$INGEST_SHARED_SECRET"
     "CANARY_SHARED_SECRET=$CANARY_SHARED_SECRET"

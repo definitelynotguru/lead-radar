@@ -22,7 +22,7 @@ export function createDatabase(databaseUrl: string): Sql {
 
 export function readRuntimeEnv(): RuntimeEnv {
   return {
-    databaseUrl: Deno.env.get("SUPABASE_DB_URL") ?? "",
+    databaseUrl: Deno.env.get("LEAD_RADAR_DATABASE_URL") ?? Deno.env.get("SUPABASE_DB_URL") ?? "",
     discordWebhookUrl: Deno.env.get("DISCORD_WEBHOOK_URL") ?? undefined,
     githubToken: Deno.env.get("GITHUB_TOKEN") ?? undefined,
     ingestSecret: Deno.env.get("INGEST_SHARED_SECRET") ?? undefined,

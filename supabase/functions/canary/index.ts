@@ -141,7 +141,7 @@ serveEntrypoint(async (request) => {
     return jsonResponse({ error: "unauthorized" }, 401);
   }
   if (!env.databaseUrl) {
-    return jsonResponse({ error: "SUPABASE_DB_URL is not configured" }, 500);
+    return jsonResponse({ error: "LEAD_RADAR_DATABASE_URL is not configured" }, 500);
   }
 
   const sql = createDatabase(env.databaseUrl);

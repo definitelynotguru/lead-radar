@@ -197,7 +197,7 @@ serveEntrypoint(async (request) => {
   }
 
   const env = readRuntimeEnv();
-  if (!env.databaseUrl) return corsJsonResponse({ error: "SUPABASE_DB_URL is not configured" }, 500);
+  if (!env.databaseUrl) return corsJsonResponse({ error: "LEAD_RADAR_DATABASE_URL is not configured" }, 500);
   if (!hasValidBearerToken(request, env.dashboardAccessToken)) {
     return corsJsonResponse({ error: "unauthorized" }, 401);
   }

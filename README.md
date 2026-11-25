@@ -165,7 +165,7 @@ Run the Edge Functions locally with plain Deno:
 
 ```bash
 # export these in each terminal, or use: set -a; source .env; set +a
-export SUPABASE_DB_URL=postgresql://postgres:postgres@localhost:55432/lead_radar
+export LEAD_RADAR_DATABASE_URL=postgresql://postgres:postgres@localhost:55432/lead_radar
 export ALLOW_INSECURE_LOCAL=true
 export INGEST_SHARED_SECRET=local-ingest
 export CANARY_SHARED_SECRET=local-canary
@@ -228,7 +228,7 @@ Edge Function secrets:
 
 | Variable                       |    Required | Purpose                                               |
 | ------------------------------ | ----------: | ----------------------------------------------------- |
-| `SUPABASE_DB_URL`              |         yes | pooled Postgres connection string, transaction mode   |
+| `LEAD_RADAR_DATABASE_URL`              |         yes | pooled Postgres connection string, transaction mode   |
 | `DISCORD_WEBHOOK_URL`          |         yes | lead and operational alert delivery                   |
 | `INGEST_SHARED_SECRET`         |         yes | shared secret Supabase cron sends to `ingest-tick`    |
 | `CANARY_SHARED_SECRET`         |         yes | shared secret Supabase cron sends to `canary`         |
