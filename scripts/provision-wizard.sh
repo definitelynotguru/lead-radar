@@ -204,6 +204,10 @@ TOTAL_STAGES=7
 
 banner "lead-radar production setup"
 
+if [[ -e "$ENV_FILE" ]]; then
+  chmod 600 "$ENV_FILE"
+fi
+
 stage "Supabase: project and access token"
 say "Create or choose the Supabase project that will run lead-radar."
 open_url "https://supabase.com/dashboard/new"
@@ -278,6 +282,7 @@ sed \
   -e "s/__INGEST_SECRET__/$INGEST_SHARED_SECRET/g" \
   -e "s/__CANARY_SECRET__/$CANARY_SHARED_SECRET/g" \
   supabase/cron-setup.sql > .lead-radar-cron.generated.sql
+chmod 600 .lead-radar-cron.generated.sql
 say "Cron cannot be safely created without one SQL-editor step because it must create Vault secrets inside your project."
 open_url "https://supabase.com/dashboard/project/$SUPABASE_PROJECT_REF/sql/new"
 step "Open .lead-radar-cron.generated.sql from this repository, copy the whole file into the SQL editor, and run it."
