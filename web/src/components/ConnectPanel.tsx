@@ -69,7 +69,7 @@ export function ConnectPanel({
     <section className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-panel/75 backdrop-blur">
       <div className="grid gap-6 p-5 md:p-6 xl:grid-cols-[0.9fr_1.4fr] xl:items-end">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-100">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200/20 bg-emerald-200/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-50">
             <ShieldCheck size={14} /> owner access
           </div>
           <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white">
@@ -101,7 +101,7 @@ export function ConnectPanel({
                 value={apiUrl}
                 onChange={(event) => setApiUrl(event.target.value)}
                 placeholder="https://project.supabase.co/functions/v1/dashboard-api"
-                className="w-full rounded-2xl border border-white/10 bg-ink/70 py-3 pl-10 pr-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-sky-300/50 focus:ring-2 focus:ring-sky-300/20"
+                className="w-full rounded-2xl border border-white/10 bg-ink/70 py-3 pl-10 pr-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-200/50 focus:ring-2 focus:ring-emerald-200/20"
               />
             </span>
           </label>
@@ -119,7 +119,7 @@ export function ConnectPanel({
                 onChange={(event) => setToken(event.target.value)}
                 type="password"
                 placeholder="owner access token"
-                className="w-full rounded-2xl border border-white/10 bg-ink/70 py-3 pl-10 pr-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-sky-300/50 focus:ring-2 focus:ring-sky-300/20"
+                className="w-full rounded-2xl border border-white/10 bg-ink/70 py-3 pl-10 pr-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-200/50 focus:ring-2 focus:ring-emerald-200/20"
               />
             </span>
           </label>
@@ -130,7 +130,7 @@ export function ConnectPanel({
                 setEditing(false);
                 onSave(apiUrl, token);
               }}
-              className="rounded-full bg-sky-300 px-5 py-2.5 text-sm font-semibold text-ink transition hover:bg-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-100/70"
+              className="rounded-full bg-emerald-200 px-5 py-2.5 text-sm font-semibold text-ink transition hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-50/70"
             >
               Connect live data
             </button>

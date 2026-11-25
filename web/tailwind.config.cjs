@@ -9,11 +9,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        ink: "#0b1020",
-        panel: "#111832",
-        panelSoft: "#182140",
+        ink: "#161c1a",
+        panel: "#1f2725",
+        panelSoft: "#28322f",
         line: "rgba(148, 163, 184, 0.18)",
-        mist: "#94a3b8",
+        mist: "#a4aaa2",
         hn: "#ff8a3d",
         github: "#a78bfa",
         remotive: "#60a5fa",

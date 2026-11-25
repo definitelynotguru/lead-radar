@@ -14,15 +14,18 @@ export function Header({
   onRefresh,
 }: HeaderProps) {
   return (
-    <header className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-panel/80 shadow-glow backdrop-blur">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(255,138,61,0.2),transparent_32%),radial-gradient(circle_at_88%_18%,rgba(96,165,250,0.22),transparent_34%)]" />
+    <header
+      data-enter
+      className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-panel/80 shadow-glow backdrop-blur"
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(159,199,184,0.16),transparent_34%),radial-gradient(circle_at_88%_18%,rgba(159,199,184,0.14),transparent_34%)]" />
       <div className="relative flex flex-col gap-8 p-6 md:p-8 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-3xl">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-300 via-sky-300 to-violet-400 text-ink shadow-lg shadow-sky-950/40">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-300 via-emerald-200 to-violet-400 text-ink shadow-lg shadow-sky-950/40">
               <Radar size={23} strokeWidth={2.5} />
             </div>
-            <span className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
+            <span className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-100/80">
               zero-cost reliability demo
             </span>
             {demoMode ? (
@@ -55,7 +58,7 @@ export function Header({
           <button
             type="button"
             onClick={onRefresh}
-            className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.07] px-4 py-2.5 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/[0.12] focus:outline-none focus:ring-2 focus:ring-sky-300/60"
+            className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.07] px-4 py-2.5 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/[0.12] focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
             Refresh

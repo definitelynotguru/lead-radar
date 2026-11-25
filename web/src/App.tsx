@@ -237,7 +237,7 @@ export default function App() {
 
   return (
     <main className="min-h-screen bg-ink text-slate-200">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_20%_-10%,rgba(255,138,61,0.12),transparent_30%),radial-gradient(circle_at_85%_0%,rgba(96,165,250,0.14),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.025),transparent_26rem)]" />
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_20%_-10%,rgba(255,138,61,0.12),transparent_30%),radial-gradient(circle_at_85%_0%,rgba(159,199,184,0.12),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.025),transparent_26rem)]" />
       <div className="relative mx-auto flex max-w-[1440px] flex-col gap-6 px-4 py-5 md:px-6 lg:px-8">
         <Header
           demoMode={demoMode}

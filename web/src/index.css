@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,7 +6,7 @@
 :root {
   color-scheme: dark;
   font-family:
-    Inter,
+    Geist,
     ui-sans-serif,
     system-ui,
     -apple-system,
@@ -54,4 +55,46 @@ body {
 
 details summary::-webkit-details-marker {
   display: none;
+}
+
+[data-enter] {
+  animation: taste-enter 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes taste-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+button,
+a {
+  transition-duration: 180ms;
+}
+
+button:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+@media (hover: hover) {
+  article {
+    transition:
+      background-color 180ms ease,
+      transform 180ms ease,
+      border-color 180ms ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-enter],
+  button,
+  article {
+    animation: none;
+    transition: none;
+  }
 }

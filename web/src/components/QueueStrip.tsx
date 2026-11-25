@@ -125,7 +125,7 @@ export function QueueStrip({
                           type="button"
                           onClick={() => onRequeue(job.id)}
                           disabled={busyJobId === job.id}
-                          className="inline-flex items-center gap-2 rounded-xl border border-sky-300/30 bg-sky-300/10 px-3 py-2 text-sm font-medium text-sky-100 transition hover:bg-sky-300/20 disabled:opacity-50"
+                          className="inline-flex items-center gap-2 rounded-xl border border-emerald-200/30 bg-emerald-200/10 px-3 py-2 text-sm font-medium text-emerald-50 transition hover:bg-emerald-200/20 disabled:opacity-50"
                         >
                           <RotateCcw
                             size={14}

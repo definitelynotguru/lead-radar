@@ -12,25 +12,25 @@ const ACTIONS: Array<{
     status: "applied",
     label: "Applied",
     className:
-      "border-sky-300/30 bg-sky-300/10 text-sky-100 hover:bg-sky-300/20",
+      "border-white/10 bg-white/[0.04] text-slate-200 hover:border-emerald-200/35 hover:bg-emerald-200/10 hover:text-emerald-50",
   },
   {
     status: "replied",
     label: "Replied",
     className:
-      "border-emerald-300/30 bg-emerald-300/10 text-emerald-100 hover:bg-emerald-300/20",
+      "border-white/10 bg-white/[0.04] text-slate-200 hover:border-emerald-300/35 hover:bg-emerald-300/10 hover:text-emerald-100",
   },
   {
     status: "rejected",
     label: "Rejected",
     className:
-      "border-red-300/30 bg-red-300/10 text-red-100 hover:bg-red-300/20",
+      "border-white/10 bg-white/[0.04] text-slate-200 hover:border-red-300/35 hover:bg-red-300/10 hover:text-red-100",
   },
   {
     status: "ignored",
     label: "Ignore",
     className:
-      "border-slate-400/30 bg-slate-400/10 text-slate-200 hover:bg-slate-400/20",
+      "border-white/10 bg-white/[0.025] text-slate-400 hover:bg-white/[0.07] hover:text-slate-200",
   },
 ];
 
@@ -53,7 +53,7 @@ function matchesFilter(lead: LeadRow, filter: Filter): boolean {
 
 function statusClass(status: ApplicationStatus | null | undefined): string {
   if (status === "applied")
-    return "border-sky-300/30 bg-sky-300/10 text-sky-100";
+    return "border-emerald-200/30 bg-emerald-200/10 text-emerald-50";
   if (status === "replied")
     return "border-emerald-300/30 bg-emerald-300/10 text-emerald-100";
   if (status === "rejected")
@@ -114,7 +114,7 @@ export function LeadInbox({ leads, busyLeadId, onAction }: LeadInboxProps) {
       <div className="border-b border-white/10 p-5 md:p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-200/70">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-100/70">
               owner workflow
             </p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">
@@ -134,7 +134,7 @@ export function LeadInbox({ leads, busyLeadId, onAction }: LeadInboxProps) {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search company, role, tag…"
-              className="w-full rounded-full border border-white/10 bg-ink/70 py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-sky-300/50 focus:ring-2 focus:ring-sky-300/20"
+              className="w-full rounded-full border border-white/10 bg-ink/70 py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-200/50 focus:ring-2 focus:ring-emerald-200/20"
             />
           </label>
         </div>
@@ -147,7 +147,7 @@ export function LeadInbox({ leads, busyLeadId, onAction }: LeadInboxProps) {
               onClick={() => setFilter(key)}
               className={`rounded-full border px-3.5 py-2 text-sm transition ${
                 filter === key
-                  ? "border-sky-300/60 bg-sky-300/15 text-white shadow-sm shadow-sky-950/30"
+                  ? "border-emerald-200/60 bg-emerald-200/15 text-white shadow-sm shadow-sky-950/30"
                   : "border-white/10 bg-white/[0.025] text-slate-400 hover:bg-white/[0.07] hover:text-slate-200"
               }`}
             >
@@ -210,11 +210,11 @@ export function LeadInbox({ leads, busyLeadId, onAction }: LeadInboxProps) {
                     href={lead.canonical_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-3 inline-flex max-w-full items-start gap-2 text-left text-lg font-semibold leading-7 tracking-tight text-white transition hover:text-sky-200"
+                    className="mt-3 inline-flex max-w-full items-start gap-2 text-left text-lg font-semibold leading-7 tracking-tight text-white transition hover:text-emerald-100"
                   >
                     <span className="min-w-0 line-clamp-2">{lead.title}</span>
                     <ExternalLink
-                      className="mt-1.5 shrink-0 text-slate-500 transition group-hover:text-sky-300"
+                      className="mt-1.5 shrink-0 text-slate-500 transition group-hover:text-emerald-200"
                       size={15}
                     />
                   </a>
