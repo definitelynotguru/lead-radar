@@ -228,6 +228,11 @@ async function requeueJob(sql: Sql, request: Request): Promise<Response> {
   if (!body?.job_id) return corsJsonResponse({ error: "job_id is required" }, 400);
   if (!isUuid(body.job_id)) return corsJsonResponse({ error: "job_id must be a UUID" }, 400);
 
+  const existing = await sql<Row[]>`
+    select id from jobs where id = ${body.job_id}::uuid
+  `;
+  if (!existing.length) return corsJsonResponse({ error: "job not found" }, 404);
+
   try {
     const rows = await sql<Row[]>`
       select row_to_json(job) as job
@@ -244,6 +249,11 @@ async function acknowledgeJob(sql: Sql, request: Request): Promise<Response> {
   const body = await request.json().catch(() => null) as { job_id?: string } | null;
   if (!body?.job_id) return corsJsonResponse({ error: "job_id is required" }, 400);
   if (!isUuid(body.job_id)) return corsJsonResponse({ error: "job_id must be a UUID" }, 400);
+
+  const existing = await sql<Row[]>`
+    select id from jobs where id = ${body.job_id}::uuid
+  `;
+  if (!existing.length) return corsJsonResponse({ error: "job not found" }, 404);
 
   try {
     const rows = await sql<Row[]>`

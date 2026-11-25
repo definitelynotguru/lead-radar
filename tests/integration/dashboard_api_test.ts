@@ -94,7 +94,7 @@ Deno.test("dashboard API rejects bad auth and invalid mutation input before data
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
       body: JSON.stringify({ job_id: crypto.randomUUID() }),
     });
-    assertEquals(missingJob.status, 409);
+    assertEquals(missingJob.status, 404);
   } finally {
     child.kill("SIGTERM");
     await child.status;
