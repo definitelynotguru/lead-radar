@@ -1,39 +1,14 @@
-import { ExternalLink, Inbox, MapPin, Search, Tag } from "lucide-react";
-import { useMemo, useState } from "react";
-import { sourceAccent, sourceLabel, timeAgo } from "../lib/format";
-import type { ApplicationStatus, LeadRow } from "../types";
+import { ArrowUpRight, SearchX } from "lucide-react";
+import { useMemo, useState, type CSSProperties } from "react";
+import { sourceLabel, timeAgo } from "../lib/format";
+import type { ApplicationStatus, LeadRow, LeadSource } from "../types";
 
-const ACTIONS: Array<{
-  status: ApplicationStatus;
-  label: string;
-  className: string;
-}> = [
-  {
-    status: "applied",
-    label: "Applied",
-    className:
-      "border-white/10 bg-white/[0.04] text-slate-200 hover:border-emerald-200/35 hover:bg-emerald-200/10 hover:text-emerald-50",
-  },
-  {
-    status: "replied",
-    label: "Replied",
-    className:
-      "border-white/10 bg-white/[0.04] text-slate-200 hover:border-emerald-300/35 hover:bg-emerald-300/10 hover:text-emerald-100",
-  },
-  {
-    status: "rejected",
-    label: "Rejected",
-    className:
-      "border-white/10 bg-white/[0.04] text-slate-200 hover:border-red-300/35 hover:bg-red-300/10 hover:text-red-100",
-  },
-  {
-    status: "ignored",
-    label: "Ignore",
-    className:
-      "border-white/10 bg-white/[0.025] text-slate-400 hover:bg-white/[0.07] hover:text-slate-200",
-  },
+const ACTIONS: ApplicationStatus[] = [
+  "applied",
+  "replied",
+  "rejected",
+  "ignored",
 ];
-
 const FILTERS = [
   ["inbox", "Inbox"],
   ["applied", "Applied"],
@@ -42,8 +17,14 @@ const FILTERS = [
   ["ignored", "Ignored"],
   ["all", "All"],
 ] as const;
-
 type Filter = (typeof FILTERS)[number][0];
+const PAGE_SIZE = 8;
+
+const SOURCE_COLORS: Record<LeadSource, string> = {
+  hn: "var(--hn)",
+  github: "var(--github)",
+  remotive: "var(--remotive)",
+};
 
 function matchesFilter(lead: LeadRow, filter: Filter): boolean {
   if (filter === "all") return true;
@@ -51,23 +32,10 @@ function matchesFilter(lead: LeadRow, filter: Filter): boolean {
   return lead.application_status === filter;
 }
 
-function statusClass(status: ApplicationStatus | null | undefined): string {
-  if (status === "applied")
-    return "border-emerald-200/30 bg-emerald-200/10 text-emerald-50";
-  if (status === "replied")
-    return "border-emerald-300/30 bg-emerald-300/10 text-emerald-100";
-  if (status === "rejected")
-    return "border-red-300/30 bg-red-300/10 text-red-100";
-  if (status === "ignored")
-    return "border-slate-400/30 bg-slate-400/10 text-slate-300";
-  return "border-amber-300/30 bg-amber-300/10 text-amber-100";
-}
-
-function sourceRail(source: string): string {
-  if (source === "hn") return "bg-hn";
-  if (source === "github") return "bg-github";
-  if (source === "remotive") return "bg-remotive";
-  return "bg-slate-500";
+function actionLabel(status: ApplicationStatus): string {
+  return status === "ignored"
+    ? "Ignore"
+    : status[0].toUpperCase() + status.slice(1);
 }
 
 interface LeadInboxProps {
@@ -79,6 +47,8 @@ interface LeadInboxProps {
 export function LeadInbox({ leads, busyLeadId, onAction }: LeadInboxProps) {
   const [filter, setFilter] = useState<Filter>("inbox");
   const [query, setQuery] = useState("");
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -100,187 +70,197 @@ export function LeadInbox({ leads, busyLeadId, onAction }: LeadInboxProps) {
     });
   }, [leads, filter, query]);
 
-  const counts = useMemo(() => {
-    return Object.fromEntries(
-      FILTERS.map(([key]) => [
-        key,
-        leads.filter((lead) => matchesFilter(lead, key)).length,
-      ]),
-    ) as Record<Filter, number>;
-  }, [leads]);
+  const visibleLeads = filtered.slice(0, visibleCount);
+
+  function resetView() {
+    setVisibleCount(PAGE_SIZE);
+    setOpenId(null);
+  }
+
+  function changeFilter(nextFilter: Filter) {
+    setFilter(nextFilter);
+    resetView();
+  }
+
+  function changeQuery(nextQuery: string) {
+    setQuery(nextQuery);
+    resetView();
+  }
+
+  const counts = useMemo(
+    () =>
+      Object.fromEntries(
+        FILTERS.map(([key]) => [
+          key,
+          leads.filter((lead) => matchesFilter(lead, key)).length,
+        ]),
+      ) as Record<Filter, number>,
+    [leads],
+  );
 
   return (
-    <section className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-panel/75 shadow-2xl shadow-black/10 backdrop-blur">
-      <div className="border-b border-white/10 p-5 md:p-6">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+    <section className="panel inbox-panel" id="inbox">
+      <div className="section-head">
+        <div className="section-heading-row">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-100/70">
-              owner workflow
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">
-              Lead inbox
-            </h2>
-            <p className="mt-1.5 max-w-xl text-sm leading-6 text-slate-400">
-              Triage newest posts first. Every action is persisted as an
-              application and outcome event.
+            <div className="eyebrow">Owner workflow</div>
+            <h2>Lead inbox</h2>
+            <p className="section-copy">
+              Triage newest posts first. Every action is persisted as
+              application and outcome history.
             </p>
           </div>
-          <label className="relative block min-w-0 lg:w-96">
-            <Search
-              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-              size={16}
-            />
+          <label className="search-box" htmlFor="lead-search">
+            <span>Search</span>
             <input
+              id="lead-search"
+              className="search-input"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search company, role, tag…"
-              className="w-full rounded-full border border-white/10 bg-ink/70 py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-200/50 focus:ring-2 focus:ring-emerald-200/20"
+              onChange={(event) => changeQuery(event.target.value)}
+              placeholder="Company, role, tag"
             />
           </label>
         </div>
-
-        <div className="mt-6 flex flex-wrap gap-2">
+        <div className="filter-row">
           {FILTERS.map(([key, label]) => (
             <button
               key={key}
               type="button"
-              onClick={() => setFilter(key)}
-              className={`rounded-full border px-3.5 py-2 text-sm transition ${
-                filter === key
-                  ? "border-emerald-200/60 bg-emerald-200/15 text-white shadow-sm shadow-sky-950/30"
-                  : "border-white/10 bg-white/[0.025] text-slate-400 hover:bg-white/[0.07] hover:text-slate-200"
-              }`}
+              className={`filter-button ${filter === key ? "active" : ""}`}
+              onClick={() => changeFilter(key)}
             >
               {label}
-              <span className="ml-2 rounded-full bg-black/20 px-1.5 py-0.5 text-[11px] opacity-80">
-                {counts[key]}
-              </span>
+              <span className="filter-count">{counts[key]}</span>
             </button>
           ))}
         </div>
       </div>
 
-      <div className="divide-y divide-white/[0.07]">
+      <div className="lead-list">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center px-6 py-14 text-center">
-            <span className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-400">
-              <Inbox size={24} />
-            </span>
-            <h3 className="mt-4 text-lg font-semibold text-white">
-              Nothing matches this view
-            </h3>
-            <p className="mt-1 max-w-sm text-sm leading-6 text-slate-400">
-              Adjust the filter or search query. New leads land here as soon as
+          <div className="empty-state">
+            <div className="empty-icon">
+              <SearchX size={21} strokeWidth={1.8} />
+            </div>
+            <h3>Nothing matches this view</h3>
+            <p>
+              Adjust the filter or search. New leads appear here as soon as
               ingestion persists them.
             </p>
           </div>
         ) : (
-          filtered.map((lead) => (
-            <article
-              key={lead.id}
-              className="group relative transition hover:bg-white/[0.025]"
-            >
-              <span
-                className={`absolute bottom-5 left-0 top-5 w-1 rounded-r-full opacity-80 ${sourceRail(lead.source)}`}
-              />
-              <div className="grid gap-5 px-5 py-5 md:px-6 xl:grid-cols-[minmax(0,1fr)_10.5rem]">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${sourceAccent(lead.source)}`}
-                    >
+          visibleLeads.map((lead) => {
+            const open = openId === lead.id;
+            return (
+              <article
+                className="lead-row"
+                key={lead.id}
+                style={
+                  {
+                    "--source-color": SOURCE_COLORS[lead.source],
+                  } as CSSProperties
+                }
+              >
+                <div>
+                  <div className="lead-meta">
+                    <span className="pill source">
                       {sourceLabel(lead.source)}
                     </span>
                     <span
-                      className={`rounded-full border px-2.5 py-1 text-xs font-medium ${statusClass(lead.application_status)}`}
+                      className={`pill ${lead.application_status ?? "new"}`}
                     >
                       {lead.application_status ?? "new"}
                     </span>
                     {lead.application_is_demo ? (
-                      <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-xs text-amber-100">
-                        demo outcome
-                      </span>
+                      <span className="pill">demo outcome</span>
                     ) : null}
-                    <span className="text-xs text-slate-500">
-                      posted {timeAgo(lead.posted_at)}
-                    </span>
+                    <span>posted {timeAgo(lead.posted_at)}</span>
                   </div>
-
                   <a
+                    className="lead-title"
                     href={lead.canonical_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-3 inline-flex max-w-full items-start gap-2 text-left text-lg font-semibold leading-7 tracking-tight text-white transition hover:text-emerald-100"
                   >
-                    <span className="min-w-0 line-clamp-2">{lead.title}</span>
-                    <ExternalLink
-                      className="mt-1.5 shrink-0 text-slate-500 transition group-hover:text-emerald-200"
-                      size={15}
-                    />
+                    {lead.title}{" "}
+                    <ArrowUpRight size={17} strokeWidth={1.9} aria-hidden />
                   </a>
-
-                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-slate-400">
-                    {lead.company ? (
-                      <span className="font-medium text-slate-100">
-                        {lead.company}
-                      </span>
-                    ) : null}
-                    {lead.location ? (
-                      <span className="inline-flex items-center gap-1.5">
-                        <MapPin size={14} /> {lead.location}
-                      </span>
-                    ) : null}
-                    {lead.salary ? (
-                      <span className="font-medium text-emerald-200">
-                        {lead.salary}
-                      </span>
-                    ) : null}
+                  <div className="lead-details">
+                    {lead.company ? <strong>{lead.company}</strong> : null}
+                    {lead.location ? <span>{lead.location}</span> : null}
+                    {lead.salary ? <span>{lead.salary}</span> : null}
                   </div>
-
-                  {lead.tags.length > 0 ? (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
+                  {lead.tags.length ? (
+                    <div className="tag-row">
                       {lead.tags.slice(0, 6).map((tag) => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center gap-1 rounded-full border border-white/[0.07] bg-white/[0.035] px-2.5 py-1 text-xs text-slate-400"
-                        >
-                          <Tag size={11} /> {tag}
+                        <span className="tag" key={tag}>
+                          {tag}
                         </span>
                       ))}
                     </div>
                   ) : null}
-
-                  <details className="mt-3 max-w-4xl text-sm text-slate-400">
-                    <summary className="cursor-pointer select-none text-slate-300 transition hover:text-white">
-                      Details
-                    </summary>
-                    <p className="mt-2 whitespace-pre-wrap leading-6">
+                  <button
+                    className="details-toggle"
+                    type="button"
+                    aria-expanded={open}
+                    onClick={() => setOpenId(open ? null : lead.id)}
+                  >
+                    {open ? "Hide details" : "Show details"}
+                  </button>
+                  {open ? (
+                    <p className="lead-description">
                       {lead.description || "No description captured."}
                     </p>
-                  </details>
+                  ) : null}
                 </div>
-
-                <div className="grid shrink-0 grid-cols-2 content-start gap-2 xl:grid-cols-1">
-                  {ACTIONS.map((action) => (
+                <div
+                  className="lead-actions"
+                  aria-label={`Actions for ${lead.title}`}
+                >
+                  {ACTIONS.map((status) => (
                     <button
-                      key={action.status}
+                      key={status}
                       type="button"
                       disabled={
                         busyLeadId === lead.id ||
-                        lead.application_status === action.status
+                        lead.application_status === status
                       }
-                      onClick={() => onAction(lead, action.status)}
-                      className={`rounded-xl border px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${action.className}`}
+                      onClick={() => onAction(lead, status)}
+                      className={`action-button ${status} ${lead.application_status === status ? "selected" : ""}`}
                     >
-                      {busyLeadId === lead.id ? "Saving…" : action.label}
+                      {busyLeadId === lead.id ? "Saving" : actionLabel(status)}
                     </button>
                   ))}
                 </div>
-              </div>
-            </article>
-          ))
+              </article>
+            );
+          })
         )}
       </div>
+      {filtered.length ? (
+        <div className="list-footer">
+          <span>
+            Showing {visibleLeads.length} of {filtered.length}
+          </span>
+          {visibleCount < filtered.length ? (
+            <button
+              className="button ghost"
+              type="button"
+              onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+            >
+              Show more
+            </button>
+          ) : filtered.length > PAGE_SIZE ? (
+            <button
+              className="button ghost"
+              type="button"
+              onClick={() => setVisibleCount(PAGE_SIZE)}
+            >
+              Show less
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </section>
   );
 }

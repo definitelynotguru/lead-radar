@@ -1,23 +1,20 @@
-import { KeyRound, Link2, PencilLine, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 
 interface ConnectPanelProps {
   initialApiUrl: string;
   initialToken: string;
   connected: boolean;
+  loading: boolean;
   error: string | null;
   onSave: (apiUrl: string, token: string) => void;
   onUseDemo: () => void;
-}
-
-function compactUrl(value: string): string {
-  return value.replace(/^https?:\/\//, "").replace(/\/$/, "");
 }
 
 export function ConnectPanel({
   initialApiUrl,
   initialToken,
   connected,
+  loading,
   error,
   onSave,
   onUseDemo,
@@ -25,134 +22,113 @@ export function ConnectPanel({
   const [apiUrl, setApiUrl] = useState(initialApiUrl);
   const [token, setToken] = useState(initialToken);
   const [editing, setEditing] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   if (!editing) {
     return (
-      <section className="rounded-3xl border border-white/10 bg-white/[0.045] px-5 py-4 backdrop-blur">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-300/10 text-emerald-200">
-              <ShieldCheck size={17} />
-            </span>
-            <div className="min-w-0">
-              <div className="text-sm font-semibold text-white">
-                {connected
-                  ? "Live data connected"
-                  : "Exploring explicit demo data"}
-              </div>
-              <div className="truncate text-xs text-slate-400">
-                {connected
-                  ? compactUrl(initialApiUrl)
-                  : "Connect a deployed dashboard-api when you are ready"}
-              </div>
-            </div>
+      <section className="panel connection-strip" data-enter>
+        <div className="connection-state">
+          <span className={`status-dot ${connected ? "live" : ""}`} />
+          <div>
+            <strong>
+              {connected ? "Live data connected" : "Exploring demo data"}
+            </strong>
+            <small>
+              {connected
+                ? apiUrl.replace(/^https?:\/\//, "")
+                : "Connect dashboard-api when you are ready. Demo outcomes are explicitly marked."}
+            </small>
           </div>
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/10 px-3.5 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/[0.08]"
-          >
-            <PencilLine size={14} />
-            {connected ? "Change connection" : "Connect live data"}
-          </button>
         </div>
-        {error ? (
-          <p className="mt-3 rounded-2xl border border-red-300/25 bg-red-300/10 p-3 text-sm text-red-100">
-            {error}
-          </p>
-        ) : null}
+        {loading ? <span className="pill">Syncing snapshot</span> : null}
+        <button
+          className="button ghost"
+          type="button"
+          onClick={() => setEditing(true)}
+        >
+          {connected ? "Change connection" : "Connect live data"}
+        </button>
+        {error ? <div className="error-banner">{error}</div> : null}
       </section>
     );
   }
 
   return (
-    <section className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-panel/75 backdrop-blur">
-      <div className="grid gap-6 p-5 md:p-6 xl:grid-cols-[0.9fr_1.4fr] xl:items-end">
-        <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200/20 bg-emerald-200/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-50">
-            <ShieldCheck size={14} /> owner access
-          </div>
-          <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white">
-            Connect the live snapshot.
-          </h2>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">
-            The static dashboard never ships the service-role key or database
-            URL. Paste the deployed dashboard-api URL and owner token; they stay
-            in this browser&apos;s local storage.
-          </p>
-          {error ? (
-            <p className="mt-4 rounded-2xl border border-red-300/25 bg-red-300/10 p-3 text-sm text-red-100">
-              {error}
-            </p>
-          ) : null}
+    <section className="panel connection-panel" data-enter>
+      <div>
+        <div className="eyebrow">Owner access</div>
+        <h2>Connect the live snapshot.</h2>
+        <p className="section-copy">
+          The static dashboard never ships the service-role key or database URL.
+          The owner token stays in this browser's local storage.
+        </p>
+        {(formError ?? error) ? (
+          <div className="error-banner">{formError ?? error}</div>
+        ) : null}
+      </div>
+      <div>
+        <div className="connection-fields">
+          <label>
+            Dashboard API
+            <input
+              value={apiUrl}
+              onChange={(event) => setApiUrl(event.target.value)}
+              placeholder="https://project.supabase.co/functions/v1/dashboard-api"
+              inputMode="url"
+              autoComplete="off"
+            />
+          </label>
+          <label>
+            Owner token
+            <input
+              value={token}
+              onChange={(event) => setToken(event.target.value)}
+              type="password"
+              placeholder="owner access token"
+              autoComplete="off"
+            />
+          </label>
         </div>
-
-        <div className="grid gap-3 lg:grid-cols-[1.15fr_0.85fr]">
-          <label className="block">
-            <span className="mb-1.5 block text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
-              dashboard api
-            </span>
-            <span className="relative block">
-              <Link2
-                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"
-                size={15}
-              />
-              <input
-                value={apiUrl}
-                onChange={(event) => setApiUrl(event.target.value)}
-                placeholder="https://project.supabase.co/functions/v1/dashboard-api"
-                className="w-full rounded-2xl border border-white/10 bg-ink/70 py-3 pl-10 pr-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-200/50 focus:ring-2 focus:ring-emerald-200/20"
-              />
-            </span>
-          </label>
-          <label className="block">
-            <span className="mb-1.5 block text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
-              owner token
-            </span>
-            <span className="relative block">
-              <KeyRound
-                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"
-                size={15}
-              />
-              <input
-                value={token}
-                onChange={(event) => setToken(event.target.value)}
-                type="password"
-                placeholder="owner access token"
-                className="w-full rounded-2xl border border-white/10 bg-ink/70 py-3 pl-10 pr-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-200/50 focus:ring-2 focus:ring-emerald-200/20"
-              />
-            </span>
-          </label>
-          <div className="flex flex-wrap gap-2 lg:col-span-2">
-            <button
-              type="button"
-              onClick={() => {
-                setEditing(false);
-                onSave(apiUrl, token);
-              }}
-              className="rounded-full bg-emerald-200 px-5 py-2.5 text-sm font-semibold text-ink transition hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-50/70"
-            >
-              Connect live data
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEditing(false);
-                onUseDemo();
-              }}
-              className="rounded-full border border-white/10 px-5 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-white/[0.08]"
-            >
-              Explore demo data
-            </button>
-          </div>
+        <div className="connection-actions">
+          <button
+            className="button primary"
+            type="button"
+            onClick={() => {
+              const trimmedUrl = apiUrl.trim();
+              const trimmedToken = token.trim();
+              try {
+                const parsed = new URL(trimmedUrl);
+                if (!["http:", "https:"].includes(parsed.protocol)) {
+                  throw new Error("unsupported protocol");
+                }
+              } catch {
+                setFormError("Enter a valid http(s) dashboard API URL.");
+                return;
+              }
+              if (!trimmedToken) {
+                setFormError("Enter the owner access token.");
+                return;
+              }
+              setFormError(null);
+              setEditing(false);
+              onSave(trimmedUrl, trimmedToken);
+            }}
+          >
+            Connect live data
+          </button>
+          <button
+            className="button"
+            type="button"
+            onClick={() => {
+              setFormError(null);
+              setEditing(false);
+              onUseDemo();
+            }}
+          >
+            Explore demo data
+          </button>
         </div>
       </div>
-      {!connected ? (
-        <div className="border-t border-white/10 bg-white/[0.03] px-5 py-3 text-xs leading-5 text-slate-400 md:px-6">
-          Demo mode is explicit. Seeded outcomes are marked demo data and are
-          not real application history.
-        </div>
-      ) : null}
     </section>
   );
 }

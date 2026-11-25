@@ -21,11 +21,3 @@ export function sourceLabel(source: string): string {
   if (source === "remotive") return "Remotive";
   return source;
 }
-
-export function sourceAccent(source: string): string {
-  if (source === "hn") return "bg-hn/15 text-hn ring-hn/30";
-  if (source === "github") return "bg-github/15 text-github ring-github/30";
-  if (source === "remotive")
-    return "bg-remotive/15 text-remotive ring-remotive/30";
-  return "bg-slate-500/15 text-slate-300 ring-slate-500/30";
-}

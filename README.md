@@ -13,8 +13,8 @@ recurring cost** within documented free tiers.
     <td><img src="docs/dashboard-live-inbox.png" width="320" alt="Live lead-radar inbox and metrics"></td>
   </tr>
   <tr>
-    <td><sub>Live local dashboard backed by real ingested API data: source health, queue state, and posts/source.</sub></td>
-    <td><sub>Owner inbox with persisted Applied/Replied/Rejected/Ignored outcomes and apply-latency metrics.</sub></td>
+    <td><sub>Live local dashboard backed by real ingested API data: lead totals, source health, and queue pressure.</sub></td>
+    <td><sub>Owner inbox with real posts, visible triage actions, source health, and backlog state.</sub></td>
   </tr>
 </table>
 
@@ -128,7 +128,7 @@ supabase/functions/_shared/   typed ingestion, parser, queue, health, Discord mo
 supabase/functions/ingest-tick/
 supabase/functions/canary/
 supabase/functions/dashboard-api/
-web/                          React/Vite/Tailwind/Recharts dashboard
+web/                          React/Vite/custom CSS/Recharts dashboard
 tests/fixtures/               real captured API fixtures
 tests/unit/                   parser, HN diff, and retry/backoff tests
 tests/integration/            PostgreSQL queue/idempotency/outcome tests

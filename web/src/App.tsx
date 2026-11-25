@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 import { ConnectPanel } from "./components/ConnectPanel";
-import { Header } from "./components/Header";
+import { Sidebar } from "./components/Sidebar";
 import { LeadInbox } from "./components/LeadInbox";
 import { QueueStrip } from "./components/QueueStrip";
 import { SourceHealthStrip } from "./components/SourceHealthStrip";
@@ -235,79 +235,122 @@ export default function App() {
     return { leads: snapshot.leads.length, inbox, applied, pendingJobs };
   }, [snapshot]);
 
+  const queueTotal = snapshot.queue.counts
+    .filter((row) => row.status !== "succeeded" && row.status !== "cancelled")
+    .reduce((sum, row) => sum + Number(row.count), 0);
+
   return (
-    <main className="min-h-screen bg-ink text-slate-200">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_20%_-10%,rgba(255,138,61,0.12),transparent_30%),radial-gradient(circle_at_85%_0%,rgba(159,199,184,0.12),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.025),transparent_26rem)]" />
-      <div className="relative mx-auto flex max-w-[1440px] flex-col gap-6 px-4 py-5 md:px-6 lg:px-8">
-        <Header
-          demoMode={demoMode}
-          loading={loading}
-          generatedAt={snapshot.generated_at}
-          onRefresh={refresh}
-        />
-
-        <ConnectPanel
-          key={`${config.apiUrl}:${config.token}`}
-          initialApiUrl={config.apiUrl}
-          initialToken={config.token}
-          connected={!demoMode}
-          error={error}
-          onSave={saveConnection}
-          onUseDemo={useDemo}
-        />
-
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {[
-            ["Visible leads", totals.leads, "latest snapshot window"],
-            ["Needs triage", totals.inbox, "no owner outcome yet"],
-            ["Active applications", totals.applied, "non-ignored outcomes"],
-            ["Queue backlog", totals.pendingJobs, "pending + retrying"],
-          ].map(([label, value, hint]) => (
-            <div
-              key={label}
-              className="rounded-3xl border border-white/10 bg-white/[0.045] p-5 backdrop-blur"
+    <div className="app-shell">
+      <Sidebar
+        live={!demoMode}
+        endpoint={config.apiUrl}
+        counts={{ inbox: totals.inbox, queue: queueTotal }}
+      />
+      <div className="main-shell">
+        <header className="topbar" id="overview" data-enter>
+          <div>
+            <div className="eyebrow">Zero-cost reliability demo</div>
+            <h1>Today&apos;s lead queue.</h1>
+            <p className="lead-copy">
+              HN Who&apos;s Hiring, GitHub bounty issues, and Remotive in one
+              owner-controlled inbox, with durable queue state visible beside
+              every source.
+            </p>
+          </div>
+          <div className="top-actions">
+            <span className="pill">
+              Snapshot{" "}
+              {snapshot.generated_at
+                ? new Date(snapshot.generated_at).toLocaleTimeString()
+                : "—"}
+            </span>
+            <button
+              className="button primary"
+              type="button"
+              disabled={loading}
+              onClick={refresh}
             >
-              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                {label}
-              </div>
-              <div className="mt-3 text-4xl font-semibold tracking-[-0.04em] text-white">
-                {value}
-              </div>
-              <div className="mt-1.5 text-sm text-slate-500">{hint}</div>
-            </div>
-          ))}
-        </section>
+              {loading ? "Refreshing…" : "Refresh"}
+            </button>
+          </div>
+        </header>
 
-        <SourceHealthStrip rows={snapshot.source_health} />
-        <LeadInbox
-          leads={snapshot.leads}
-          busyLeadId={busyLeadId}
-          onAction={(lead, status) => void handleLeadAction(lead, status)}
-        />
-        <Suspense
-          fallback={
-            <div
-              className="h-96 animate-pulse rounded-[1.75rem] border border-white/10 bg-white/[0.04]"
-              aria-label="Loading metrics"
+        <main className="page-grid">
+          <ConnectPanel
+            key={`${config.apiUrl}:${config.token}`}
+            initialApiUrl={config.apiUrl}
+            initialToken={config.token}
+            connected={!demoMode}
+            loading={loading}
+            error={error}
+            onSave={saveConnection}
+            onUseDemo={useDemo}
+          />
+
+          <section className="overview-grid" aria-label="Snapshot totals">
+            <article className="panel overview-hero" data-enter>
+              <div>
+                <div className="eyebrow">Needs triage</div>
+                <p className="hero-number">{totals.inbox}</p>
+                <p className="hero-label">
+                  posts waiting for an owner decision
+                </p>
+              </div>
+              <div className="radar-visual" aria-hidden="true" />
+            </article>
+            <article className="panel stat-card">
+              <span className="stat-label">Visible leads</span>
+              <strong className="stat-value">{totals.leads}</strong>
+              <span className="stat-hint">latest snapshot window</span>
+            </article>
+            <article className="panel stat-card">
+              <span className="stat-label">Applications</span>
+              <strong className="stat-value">{totals.applied}</strong>
+              <span className="stat-hint">non-ignored outcomes</span>
+            </article>
+          </section>
+
+          <div className="workspace-grid">
+            <LeadInbox
+              leads={snapshot.leads}
+              busyLeadId={busyLeadId}
+              onAction={(lead, status) => void handleLeadAction(lead, status)}
             />
-          }
-        >
-          <MetricsSection snapshot={snapshot} />
-        </Suspense>
-        <QueueStrip
-          queue={snapshot.queue}
-          liveMode={!demoMode}
-          busyJobId={busyJobId}
-          onRequeue={(jobId) => void handleRequeue(jobId)}
-          onAcknowledge={(jobId) => void handleAcknowledge(jobId)}
-        />
+            <div className="side-stack">
+              <SourceHealthStrip rows={snapshot.source_health} />
+              <section className="panel rail-panel">
+                <div className="eyebrow">Backlog</div>
+                <h2>Queue pressure</h2>
+                <p className="hero-number queue-pressure-number">
+                  {totals.pendingJobs}
+                </p>
+                <p className="section-copy">pending or retrying Discord work</p>
+              </section>
+            </div>
+          </div>
 
-        <footer className="pb-5 text-center text-xs text-slate-500">
-          lead-radar is a zero-cost portfolio demo. Exactly-once Discord
-          delivery is intentionally not claimed; uncertain sends stay
-          inspectable.
-        </footer>
+          <Suspense
+            fallback={
+              <div className="panel metrics-panel">
+                <h2>Loading metrics</h2>
+              </div>
+            }
+          >
+            <MetricsSection snapshot={snapshot} />
+          </Suspense>
+          <QueueStrip
+            queue={snapshot.queue}
+            liveMode={!demoMode}
+            busyJobId={busyJobId}
+            onRequeue={(jobId) => void handleRequeue(jobId)}
+            onAcknowledge={(jobId) => void handleAcknowledge(jobId)}
+          />
+          <footer className="footer-note">
+            Exactly-once Discord delivery is intentionally not claimed.
+            Uncertain sends remain inspectable.
+          </footer>
+        </main>
       </div>
-    </main>
+    </div>
   );
 }
