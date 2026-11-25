@@ -12,13 +12,13 @@ This is a polished portfolio demo, not a claim of production-grade always-on ope
 recurring cost** within documented free tiers.
 
 <p align="center">
-  <video src="https://github.com/definitelynotguru/lead-radar/releases/download/demo-v1/lead-radar-demo.mp4"
-         poster="https://github.com/definitelynotguru/lead-radar/releases/download/demo-v1/lead-radar-demo-poster.png"
-         controls muted playsinline preload="metadata" width="960"></video>
+  <a href="https://github.com/definitelynotguru/lead-radar/releases/download/demo-v1/lead-radar-demo.mp4">
+    <img src="https://github.com/definitelynotguru/lead-radar/releases/download/demo-v1/lead-radar-demo-preview.gif" width="960" alt="Animated preview of the Lead Radar product demo">
+  </a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/definitelynotguru/lead-radar/releases/download/demo-v1/lead-radar-demo.mp4">Watch the 43-second product demo</a>
+  <a href="https://github.com/definitelynotguru/lead-radar/releases/download/demo-v1/lead-radar-demo.mp4">Play the full 43-second product demo with sound</a>
   ·
   <a href="https://github.com/definitelynotguru/lead-radar/releases/tag/demo-v1">Open the demo release</a>
 </p>
