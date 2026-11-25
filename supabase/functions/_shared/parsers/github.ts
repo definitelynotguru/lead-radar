@@ -1,6 +1,16 @@
 import { compactWhitespace, truncate } from "../html.ts";
 import type { JsonObject, NormalizedLead } from "../types.ts";
 
+function safeHttpUrl(value: string | undefined): string | null {
+  if (!value) return null;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" || parsed.protocol === "http:" ? parsed.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 export interface GitHubLabel {
   name?: string;
 }
@@ -51,7 +61,7 @@ function extractBountyAmount(text: string): string | null {
 }
 
 export function parseGitHubIssue(item: GitHubSearchItem): NormalizedLead | null {
-  if (!item.title || !item.html_url || !item.created_at) return null;
+  if (!item.title || !item.html_url || !item.created_at || !safeHttpUrl(item.html_url)) return null;
   const repo = repositoryName(item.repository_url);
   const labels = labelNames(item.labels);
   if (!labels.some((label) => label.toLowerCase() === "bounty")) return null;
@@ -73,7 +83,7 @@ export function parseGitHubIssue(item: GitHubSearchItem): NormalizedLead | null 
 
   return {
     external_id: item.node_id ?? String(item.id),
-    canonical_url: item.html_url,
+    canonical_url: safeHttpUrl(item.html_url) as string,
     title: truncate(compactWhitespace(item.title), 240),
     company: repo,
     location: null,

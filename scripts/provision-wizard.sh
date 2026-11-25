@@ -261,17 +261,22 @@ if confirm "Run Supabase CLI deployment now?"; then
   npx --yes supabase@latest link --project-ref "$SUPABASE_PROJECT_REF"
   npx --yes supabase@latest db push --remote --yes
   npx --yes supabase@latest functions deploy ingest-tick canary dashboard-api --remote --no-verify-jwt
-  secret_args=(
-    "LEAD_RADAR_DATABASE_URL=$LEAD_RADAR_DATABASE_URL"
-    "DISCORD_WEBHOOK_URL=$DISCORD_WEBHOOK_URL"
-    "INGEST_SHARED_SECRET=$INGEST_SHARED_SECRET"
-    "CANARY_SHARED_SECRET=$CANARY_SHARED_SECRET"
-    "DASHBOARD_ACCESS_TOKEN=$DASHBOARD_ACCESS_TOKEN"
-    "HEALTHCHECKS_PING_URL=$HEALTHCHECKS_PING_URL"
-  )
-  [[ -n "$HEALTHCHECKS_CANARY_PING_URL" ]] && secret_args+=("HEALTHCHECKS_CANARY_PING_URL=$HEALTHCHECKS_CANARY_PING_URL")
-  [[ -n "$GITHUB_TOKEN" ]] && secret_args+=("GITHUB_TOKEN=$GITHUB_TOKEN")
-  npx --yes supabase@latest secrets set "${secret_args[@]}"
+  secret_env_file=".lead-radar-secrets.env"
+  umask 077
+  {
+    printf '%s=%s\n' "LEAD_RADAR_DATABASE_URL" "$LEAD_RADAR_DATABASE_URL"
+    printf '%s=%s\n' "DISCORD_WEBHOOK_URL" "$DISCORD_WEBHOOK_URL"
+    printf '%s=%s\n' "INGEST_SHARED_SECRET" "$INGEST_SHARED_SECRET"
+    printf '%s=%s\n' "CANARY_SHARED_SECRET" "$CANARY_SHARED_SECRET"
+    printf '%s=%s\n' "DASHBOARD_ACCESS_TOKEN" "$DASHBOARD_ACCESS_TOKEN"
+    printf '%s=%s\n' "DASHBOARD_ALLOWED_ORIGIN" "https://definitelynotguru.github.io"
+    printf '%s=%s\n' "HEALTHCHECKS_PING_URL" "$HEALTHCHECKS_PING_URL"
+    [[ -n "$HEALTHCHECKS_CANARY_PING_URL" ]] && printf '%s=%s\n' "HEALTHCHECKS_CANARY_PING_URL" "$HEALTHCHECKS_CANARY_PING_URL"
+    [[ -n "$GITHUB_TOKEN" ]] && printf '%s=%s\n' "GITHUB_TOKEN" "$GITHUB_TOKEN"
+  } > "$secret_env_file"
+  chmod 600 "$secret_env_file"
+  npx --yes supabase@latest secrets set --env-file "$secret_env_file"
+  rm -f "$secret_env_file"
 else
   SKIPPED+=("Supabase CLI deployment")
 fi
@@ -303,8 +308,18 @@ pause "Press Enter after enabling Pages or deciding to defer hosting"
 
 stage "Verify production"
 say "Checking that the deployed ingest and canary functions answer authenticated requests."
-ingest_code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST -H "x-lead-radar-secret: $INGEST_SHARED_SECRET" "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/ingest-tick" || true)
-canary_code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST -H "x-lead-radar-secret: $CANARY_SHARED_SECRET" "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/canary" || true)
+secret_curl_code() {
+  local secret="$1"
+  local url="$2"
+  local config
+  config=$(mktemp .lead-radar-curl.XXXXXX)
+  chmod 600 "$config"
+  printf 'header = "x-lead-radar-secret: %s"\n' "$secret" > "$config"
+  curl -sS -o /dev/null -w '%{http_code}' -X POST -K "$config" "$url" || true
+  rm -f "$config"
+}
+ingest_code=$(secret_curl_code "$INGEST_SHARED_SECRET" "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/ingest-tick")
+canary_code=$(secret_curl_code "$CANARY_SHARED_SECRET" "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/canary")
 say "ingest-tick HTTP $ingest_code; canary HTTP $canary_code. 200 or 207 means the function ran; 207 means a reported check is degraded."
 step "Open the deployed static dashboard, paste https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/dashboard-api and the owner token from .env."
 note "The first tick backfills incrementally. HN can take several minutes because it intentionally fetches only 20 comments per tick."

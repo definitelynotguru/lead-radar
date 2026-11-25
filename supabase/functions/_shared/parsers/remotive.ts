@@ -1,6 +1,16 @@
 import { compactWhitespace, htmlToText, truncate } from "../html.ts";
 import type { JsonObject, NormalizedLead } from "../types.ts";
 
+function safeHttpUrl(value: string | undefined): string | null {
+  if (!value) return null;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" || parsed.protocol === "http:" ? parsed.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 export interface RemotiveJob {
   id: number;
   url: string;
@@ -26,7 +36,7 @@ export interface RemotiveResponse {
 }
 
 export function parseRemotiveJob(job: RemotiveJob, legalNotice?: string): NormalizedLead | null {
-  if (!job.id || !job.url || !job.title) return null;
+  if (!job.id || !job.url || !job.title || !safeHttpUrl(job.url)) return null;
   const postedAt = job.publication_date ? new Date(job.publication_date) : null;
   if (postedAt && Number.isNaN(postedAt.getTime())) return null;
   const description = htmlToText(job.description ?? "");
@@ -41,7 +51,7 @@ export function parseRemotiveJob(job: RemotiveJob, legalNotice?: string): Normal
 
   return {
     external_id: String(job.id),
-    canonical_url: job.url,
+    canonical_url: safeHttpUrl(job.url) as string,
     title: truncate(compactWhitespace(job.title), 240),
     company: job.company_name ?? null,
     location: job.candidate_required_location ?? null,

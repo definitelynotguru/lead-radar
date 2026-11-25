@@ -104,3 +104,19 @@ Deno.test("GitHub and Remotive parsers drop malformed dates instead of poisoning
   };
   assertEquals(parseRemotiveResponse(malformedRemotive).length, 1);
 });
+
+Deno.test("GitHub and Remotive parsers reject non-http canonical URLs", async () => {
+  const github = await readFixture<GitHubSearchResponse>("tests/fixtures/github/search-issues-bounty.json");
+  const maliciousGithub = {
+    ...github,
+    items: [{ ...github.items![0], html_url: "javascript:alert(1)" }],
+  };
+  assertEquals(parseGitHubSearchResponse(maliciousGithub).length, 0);
+
+  const remotive = await readFixture<RemotiveResponse>("tests/fixtures/remotive/remote-jobs.json");
+  const maliciousRemotive = {
+    ...remotive,
+    jobs: [{ ...remotive.jobs![0], url: "javascript:alert(1)" }],
+  };
+  assertEquals(parseRemotiveResponse(maliciousRemotive).length, 0);
+});

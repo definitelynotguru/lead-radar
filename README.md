@@ -237,6 +237,7 @@ Edge Function secrets:
 | `INGEST_SHARED_SECRET`         |         yes | shared secret Supabase cron sends to `ingest-tick`    |
 | `CANARY_SHARED_SECRET`         |         yes | shared secret Supabase cron sends to `canary`         |
 | `DASHBOARD_ACCESS_TOKEN`       |         yes | owner bearer token for dashboard snapshot/actions     |
+| `DASHBOARD_ALLOWED_ORIGIN`     | recommended | exact static-dashboard origin allowed through CORS    |
 | `HEALTHCHECKS_PING_URL`        | recommended | external dead-man ping after non-degraded ingest work |
 | `HEALTHCHECKS_CANARY_PING_URL` |    optional | separate canary heartbeat                             |
 | `GITHUB_TOKEN`                 | recommended | authenticated GitHub Search API access                |

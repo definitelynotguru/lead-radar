@@ -6,14 +6,20 @@ import type { ApplicationStatus, LeadRow, LeadSource } from "../types";
 const ACTIONS: ApplicationStatus[] = [
   "applied",
   "replied",
+  "interview",
+  "offer",
   "rejected",
+  "closed",
   "ignored",
 ];
 const FILTERS = [
   ["inbox", "Inbox"],
   ["applied", "Applied"],
   ["replied", "Replied"],
+  ["interview", "Interview"],
+  ["offer", "Offer"],
   ["rejected", "Rejected"],
+  ["closed", "Closed"],
   ["ignored", "Ignored"],
   ["all", "All"],
 ] as const;
@@ -30,6 +36,17 @@ function matchesFilter(lead: LeadRow, filter: Filter): boolean {
   if (filter === "all") return true;
   if (filter === "inbox") return !lead.application_status;
   return lead.application_status === filter;
+}
+
+function safeHttpUrl(value: string): string | null {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" || parsed.protocol === "http:"
+      ? parsed.toString()
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 function actionLabel(status: ApplicationStatus): string {
@@ -176,15 +193,19 @@ export function LeadInbox({ leads, busyLeadId, onAction }: LeadInboxProps) {
                     ) : null}
                     <span>posted {timeAgo(lead.posted_at)}</span>
                   </div>
-                  <a
-                    className="lead-title"
-                    href={lead.canonical_url}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {lead.title}{" "}
-                    <ArrowUpRight size={17} strokeWidth={1.9} aria-hidden />
-                  </a>
+                  {safeHttpUrl(lead.canonical_url) ? (
+                    <a
+                      className="lead-title"
+                      href={safeHttpUrl(lead.canonical_url) ?? undefined}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {lead.title}{" "}
+                      <ArrowUpRight size={17} strokeWidth={1.9} aria-hidden />
+                    </a>
+                  ) : (
+                    <span className="lead-title">{lead.title}</span>
+                  )}
                   <div className="lead-details">
                     {lead.company ? <strong>{lead.company}</strong> : null}
                     {lead.location ? <span>{lead.location}</span> : null}
