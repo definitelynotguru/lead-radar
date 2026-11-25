@@ -9,6 +9,7 @@ const HN_API_BASE = "https://hacker-news.firebaseio.com/v0";
 const HN_BACKFILL_BATCH = 20;
 const HN_LIVE_BATCH = 30;
 const HN_DISCOVERY_TTL_HOURS = 6;
+const HN_MONTHLY_REDISCOVERY_SECONDS = 60;
 const HN_MAX_TRACKED_IDS = 10_000;
 
 interface HnCursorShape {
@@ -77,24 +78,40 @@ function mergeSeenIds(existing: number[], newlySeen: number[]): number[] {
   return merged.slice(-HN_MAX_TRACKED_IDS);
 }
 
+function sameUtcMonth(leftIso: string, rightIso: string): boolean {
+  const left = new Date(leftIso);
+  const right = new Date(rightIso);
+  return left.getUTCFullYear() === right.getUTCFullYear() && left.getUTCMonth() === right.getUTCMonth();
+}
+
 export async function fetchHnIngestion(
   cursorInput: JsonObject,
   fetcher: FetchJsonFn = fetchJson,
+  now = new Date(),
 ): Promise<IngestionOutput> {
   const errors: string[] = [];
   const cursor = readCursor(cursorInput);
-  const nowIso = new Date().toISOString();
+  const nowIso = now.toISOString();
+  const discoveryAgeSeconds = cursor.discovery_checked_at
+    ? (now.getTime() - new Date(cursor.discovery_checked_at).getTime()) / 1000
+    : Number.POSITIVE_INFINITY;
+  const trackingPreviousMonth = Boolean(
+    cursor.thread_posted_at && !sameUtcMonth(cursor.thread_posted_at, nowIso),
+  );
   const discoveryStale = !cursor.discovery_checked_at ||
-    hoursBetween(cursor.discovery_checked_at, nowIso) >= HN_DISCOVERY_TTL_HOURS;
+    hoursBetween(cursor.discovery_checked_at, nowIso) >= HN_DISCOVERY_TTL_HOURS ||
+    (trackingPreviousMonth && discoveryAgeSeconds >= HN_MONTHLY_REDISCOVERY_SECONDS);
   let threadId = cursor.thread_id;
   let threadTitle = cursor.thread_title;
   let threadPostedAt = cursor.thread_posted_at;
   let discoveryCheckedAt = cursor.discovery_checked_at;
+  let threadChanged = false;
 
   if (!threadId || discoveryStale) {
     const discovery = await discoverThread(fetcher);
     discoveryCheckedAt = nowIso;
     if (discovery.thread?.id && discovery.thread.time) {
+      threadChanged = threadId !== discovery.thread.id;
       threadId = discovery.thread.id;
       threadTitle = discovery.thread.title;
       threadPostedAt = new Date(discovery.thread.time * 1000).toISOString();
@@ -122,9 +139,11 @@ export async function fetchHnIngestion(
 
   const thread = await fetchItem(threadId, fetcher);
   const kids = thread.kids ?? [];
-  const seen = new Set(cursor.seen_ids ?? []);
+  const priorSeenIds = threadChanged ? [] : cursor.seen_ids ?? [];
+  const priorBackfillComplete = threadChanged ? false : cursor.backfill_complete;
+  const seen = new Set(priorSeenIds);
   const unseenIds = kids.filter((id) => !seen.has(id));
-  const batchSize = cursor.backfill_complete ? HN_LIVE_BATCH : HN_BACKFILL_BATCH;
+  const batchSize = priorBackfillComplete ? HN_LIVE_BATCH : HN_BACKFILL_BATCH;
   const idsToFetch = unseenIds.slice(0, batchSize);
   const fetchFailures: string[] = [];
 
@@ -141,7 +160,7 @@ export async function fetchHnIngestion(
   const successfulItems = fetchedItems.filter((item): item is HnItem => item !== null);
   const leads: NormalizedLead[] = parseHnComments(successfulItems, threadId);
   const newlySeenIds = successfulItems.map((item) => item.id);
-  const nextSeenIds = mergeSeenIds(cursor.seen_ids ?? [], newlySeenIds);
+  const nextSeenIds = mergeSeenIds(priorSeenIds, newlySeenIds);
   const nextSeenSet = new Set(nextSeenIds);
   const remainingIds = kids.filter((id) => !nextSeenSet.has(id));
   const backfillComplete = remainingIds.length === 0;
@@ -166,6 +185,7 @@ export async function fetchHnIngestion(
     diagnostics: {
       thread_id: threadId,
       thread_title: threadTitle ?? thread.title ?? null,
+      thread_changed: threadChanged,
       kids_count: kids.length,
       unseen_before: unseenIds.length,
       fetched: successfulItems.length,
