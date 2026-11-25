@@ -259,6 +259,8 @@ Never put service-role keys in the static dashboard. The browser only stores the
   high-security multi-tenant design.
 - **Public static assets:** the UI bundle is public and exposes no privileged data. API authorization is enforced
   server-side in the Edge Function.
+- **No direct table API:** all lead-radar tables enable RLS without public policies and revoke Data API role grants;
+  reads/writes intentionally go only through the owner-token Edge Function database connection.
 - **No backups on Supabase Free:** export or upgrade before using this for data you cannot lose.
 - **Best-effort external dependencies:** HN, GitHub, Remotive, Discord, Supabase, and Healthchecks can degrade
   independently. The system surfaces that degradation; it does not pretend to eliminate it.

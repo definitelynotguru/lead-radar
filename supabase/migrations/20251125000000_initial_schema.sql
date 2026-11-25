@@ -197,6 +197,43 @@ create table canary_runs (
 
 create index canary_runs_started_idx on canary_runs (started_at desc);
 
+-- The dashboard is served by the bearer-token Edge Function, not Supabase Data API.
+-- With no RLS policies, these tables are default-deny for anon/authenticated PostgREST roles.
+alter table leads enable row level security;
+alter table applications enable row level security;
+alter table outcomes enable row level security;
+alter table source_states enable row level security;
+alter table fetch_runs enable row level security;
+alter table jobs enable row level security;
+alter table job_attempts enable row level security;
+alter table dead_letters enable row level security;
+alter table canary_runs enable row level security;
+
+do $$
+declare
+  v_table_name text;
+  v_role text;
+begin
+  foreach v_role in array array['anon', 'authenticated', 'service_role'] loop
+    if exists (select 1 from pg_roles where rolname = v_role) then
+      foreach v_table_name in array array[
+        'leads',
+        'applications',
+        'outcomes',
+        'source_states',
+        'fetch_runs',
+        'jobs',
+        'job_attempts',
+        'dead_letters',
+        'canary_runs'
+      ] loop
+        execute format('revoke all on table public.%I from %I', v_table_name, v_role);
+      end loop;
+    end if;
+  end loop;
+end;
+$$;
+
 create or replace function set_updated_at()
 returns trigger
 language plpgsql

@@ -219,6 +219,23 @@ Deno.test("Postgres queue semantics survive duplicates, retries, crashes, and ou
       assertEquals(rows[0].outcomes, 2);
       assertEquals(rows[0].status, "replied");
     });
+
+    await t.step("all lead-radar tables are default-deny through row level security", async () => {
+      const rows = await sql<Array<{ protected_tables: number; total_tables: number }>>`
+        select count(*) filter (where c.relrowsecurity)::integer as protected_tables,
+               count(*)::integer as total_tables
+        from pg_class c
+        join pg_namespace n on n.oid = c.relnamespace
+        where n.nspname = 'public'
+          and c.relkind = 'r'
+          and c.relname in (
+            'leads', 'applications', 'outcomes', 'source_states', 'fetch_runs',
+            'jobs', 'job_attempts', 'dead_letters', 'canary_runs'
+          )
+      `;
+      assertEquals(rows[0].total_tables, 9);
+      assertEquals(rows[0].protected_tables, 9);
+    });
   } finally {
     await resetDatabase();
     await sql.end();
