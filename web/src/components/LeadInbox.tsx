@@ -161,7 +161,7 @@ export function LeadInbox({ leads, busyLeadId, onAction }: LeadInboxProps) {
                   } as CSSProperties
                 }
               >
-                <div>
+                <div className="lead-main">
                   <div className="lead-meta">
                     <span className="pill source">
                       {sourceLabel(lead.source)}
@@ -203,15 +203,11 @@ export function LeadInbox({ leads, busyLeadId, onAction }: LeadInboxProps) {
                     className="details-toggle"
                     type="button"
                     aria-expanded={open}
+                    aria-controls={`lead-description-${lead.id}`}
                     onClick={() => setOpenId(open ? null : lead.id)}
                   >
                     {open ? "Hide details" : "Show details"}
                   </button>
-                  {open ? (
-                    <p className="lead-description">
-                      {lead.description || "No description captured."}
-                    </p>
-                  ) : null}
                 </div>
                 <div
                   className="lead-actions"
@@ -232,6 +228,14 @@ export function LeadInbox({ leads, busyLeadId, onAction }: LeadInboxProps) {
                     </button>
                   ))}
                 </div>
+                {open ? (
+                  <p
+                    className="lead-description"
+                    id={`lead-description-${lead.id}`}
+                  >
+                    {lead.description || "No description captured."}
+                  </p>
+                ) : null}
               </article>
             );
           })

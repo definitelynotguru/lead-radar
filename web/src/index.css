@@ -483,6 +483,7 @@ h3 {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "main actions";
   gap: 20px;
   padding: 22px 24px;
   border-bottom: 1px solid var(--line);
@@ -506,6 +507,10 @@ h3 {
   width: 3px;
   border-radius: 0 99px 99px 0;
   background: var(--source-color, var(--accent));
+}
+.lead-main {
+  grid-area: main;
+  min-width: 0;
 }
 .lead-meta {
   display: flex;
@@ -585,6 +590,7 @@ h3 {
   font-size: 12px;
 }
 .lead-actions {
+  grid-area: actions;
   display: grid;
   grid-template-columns: repeat(2, minmax(88px, 1fr));
   align-content: start;
@@ -631,9 +637,15 @@ h3 {
   font-size: 13px;
 }
 .lead-description {
-  max-width: 760px;
-  margin: 10px 0 0;
+  grid-column: 1 / -1;
+  max-width: 72ch;
+  margin: -4px 0 0;
+  border-left: 2px solid
+    color-mix(in srgb, var(--source-color, var(--accent)) 45%, transparent);
+  border-radius: 0 14px 14px 0;
+  padding: 12px 16px;
   color: var(--muted);
+  background: rgba(22, 28, 26, 0.34);
   font-size: 14px;
   line-height: 1.65;
   white-space: pre-wrap;
@@ -1069,7 +1081,11 @@ h3 {
     grid-template-columns: 1fr;
   }
   .lead-row {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+  }
+  .lead-description {
+    margin-top: 0;
   }
   .lead-actions {
     min-width: 0;
@@ -1077,7 +1093,7 @@ h3 {
   .section-heading-row {
     display: block;
   }
-  .search-input {
+  .search-box {
     width: 100%;
     margin-top: 16px;
   }
