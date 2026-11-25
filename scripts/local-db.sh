@@ -7,8 +7,11 @@ URL="postgresql://postgres:postgres@localhost:${PORT}/lead_radar"
 
 case "${1:-}" in
   start)
-    docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
-    docker run -d --name "$CONTAINER" -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=lead_radar -p "$PORT:5432" postgres:16-alpine >/dev/null
+    if docker ps -a --format '{{.Names}}' | grep -qx "$CONTAINER"; then
+      docker start "$CONTAINER" >/dev/null
+    else
+      docker run -d --name "$CONTAINER" -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=lead_radar -p "$PORT:5432" postgres:16-alpine >/dev/null
+    fi
     for _ in $(seq 1 30); do
       docker exec "$CONTAINER" pg_isready -U postgres -d lead_radar >/dev/null 2>&1 && break
       sleep 1
