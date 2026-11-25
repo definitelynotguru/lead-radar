@@ -27,6 +27,7 @@ export function decodeHtmlEntities(input: string): string {
 export function htmlToText(input: string): string {
   return decodeHtmlEntities(
     input
+      .replace(/<p\b[^>]*>/gi, "\n\n")
       .replace(/<\/p\s*>/gi, "\n\n")
       .replace(/<br\s*\/?\s*>/gi, "\n")
       .replace(/<li\s*>/gi, "\n- ")

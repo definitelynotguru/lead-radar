@@ -21,6 +21,8 @@ Deno.test("HN parser handles real Who's Hiring comments", async () => {
   assertEquals(leads[0].remote, true);
   assertMatch(leads[0].salary ?? "", /\$190k/i);
   assert(!leads[0].description.includes("<p>"));
+  assert(leads[0].description.includes("\n\nHey folks"));
+  assert(!leads[0].description.includes("equityHey folks"));
   assert(!leads[0].description.includes("&#x2F;"));
   assertEquals(leads[0].metadata.hn_thread_id, 50338728);
 });
