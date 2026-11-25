@@ -203,6 +203,32 @@ Deno.test("Postgres queue semantics survive duplicates, retries, crashes, and ou
       assertEquals(attemptRows.map((row) => row.status), ["ambiguous", "success"]);
     });
 
+    await t.step("an ambiguous delivery can be acknowledged without reposting", async () => {
+      await sql`truncate dead_letters, job_attempts, jobs restart identity cascade`;
+      const inserted = await sql<Array<{ id: string }>>`
+        insert into jobs (type, idempotency_key, payload)
+        values ('discord_lead_alert', 'test-acknowledge-ambiguous', '{}'::jsonb)
+        returning id
+      `;
+      const jobId = inserted[0].id;
+      await sql`select id from claim_due_jobs('crash-worker', 10, 120)`;
+      await sql`update jobs set lease_expires_at = now() - interval '1 second' where id = ${jobId}::uuid`;
+      await sql`select mark_expired_claims_ambiguous()`;
+
+      const acknowledged = await sql<Array<{ status: string; last_error: string | null; completed_at: string | null }>>`
+        select status::text, last_error, completed_at::text
+        from acknowledge_ambiguous_job(${jobId}::uuid)
+      `;
+      assertEquals(acknowledged[0].status, "cancelled");
+      assertEquals(acknowledged[0].last_error, null);
+      assert(acknowledged[0].completed_at !== null);
+
+      const attemptCount = await sql<Array<{ count: number }>>`
+        select count(*)::integer as count from job_attempts where job_id = ${jobId}::uuid
+      `;
+      assertEquals(attemptCount[0].count, 1);
+    });
+
     await t.step("application actions upsert one application and preserve outcome history", async () => {
       const leadRows = await sql<Array<{ id: string }>>`select id from leads limit 1`;
       const leadId = leadRows[0].id;

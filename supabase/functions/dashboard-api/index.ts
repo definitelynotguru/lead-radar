@@ -202,6 +202,21 @@ async function requeueJob(sql: Sql, request: Request): Promise<Response> {
   }
 }
 
+async function acknowledgeJob(sql: Sql, request: Request): Promise<Response> {
+  const body = await request.json().catch(() => null) as { job_id?: string } | null;
+  if (!body?.job_id) return corsJsonResponse({ error: "job_id is required" }, 400);
+
+  try {
+    const rows = await sql<Row[]>`
+      select row_to_json(job) as job
+      from acknowledge_ambiguous_job(${body.job_id}::uuid) as job
+    `;
+    return corsJsonResponse({ ok: true, job: rows[0]?.job ?? null });
+  } catch (error) {
+    return corsJsonResponse({ error: errorMessage(error) }, 409);
+  }
+}
+
 serveEntrypoint(async (request) => {
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders() });
@@ -228,6 +243,9 @@ serveEntrypoint(async (request) => {
     }
     if (request.method === "POST" && url.pathname.endsWith("/jobs/requeue")) {
       return await requeueJob(sql, request);
+    }
+    if (request.method === "POST" && url.pathname.endsWith("/jobs/acknowledge")) {
+      return await acknowledgeJob(sql, request);
     }
     return corsJsonResponse({ error: "not found" }, 404);
   } catch (error) {

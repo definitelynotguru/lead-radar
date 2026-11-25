@@ -1,4 +1,4 @@
-import { AlertOctagon, RotateCcw } from "lucide-react";
+import { AlertOctagon, CheckCircle2, RotateCcw } from "lucide-react";
 import { timeAgo } from "../lib/format";
 import type { DashboardSnapshot, JobStatus } from "../types";
 
@@ -30,6 +30,7 @@ interface QueueStripProps {
   liveMode: boolean;
   busyJobId: string | null;
   onRequeue: (jobId: string) => void;
+  onAcknowledge: (jobId: string) => void;
 }
 
 export function QueueStrip({
@@ -37,6 +38,7 @@ export function QueueStrip({
   liveMode,
   busyJobId,
   onRequeue,
+  onAcknowledge,
 }: QueueStripProps) {
   return (
     <section className="rounded-3xl border border-line bg-panel/75 p-5 backdrop-blur">
@@ -107,18 +109,33 @@ export function QueueStrip({
                       </p>
                     </div>
                     {liveMode ? (
-                      <button
-                        type="button"
-                        onClick={() => onRequeue(job.id)}
-                        disabled={busyJobId === job.id}
-                        className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-sky-300/30 bg-sky-300/10 px-3 py-2 text-sm font-medium text-sky-100 transition hover:bg-sky-300/20 disabled:opacity-50"
-                      >
-                        <RotateCcw
-                          size={14}
-                          className={busyJobId === job.id ? "animate-spin" : ""}
-                        />
-                        Requeue
-                      </button>
+                      <div className="flex shrink-0 flex-wrap gap-2">
+                        {job.status === "ambiguous" ? (
+                          <button
+                            type="button"
+                            onClick={() => onAcknowledge(job.id)}
+                            disabled={busyJobId === job.id}
+                            className="inline-flex items-center gap-2 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-3 py-2 text-sm font-medium text-emerald-100 transition hover:bg-emerald-300/20 disabled:opacity-50"
+                          >
+                            <CheckCircle2 size={14} />
+                            Mark delivered
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => onRequeue(job.id)}
+                          disabled={busyJobId === job.id}
+                          className="inline-flex items-center gap-2 rounded-xl border border-sky-300/30 bg-sky-300/10 px-3 py-2 text-sm font-medium text-sky-100 transition hover:bg-sky-300/20 disabled:opacity-50"
+                        >
+                          <RotateCcw
+                            size={14}
+                            className={
+                              busyJobId === job.id ? "animate-spin" : ""
+                            }
+                          />
+                          Requeue
+                        </button>
+                      </div>
                     ) : null}
                   </div>
                   <details className="mt-3 text-xs text-mist">

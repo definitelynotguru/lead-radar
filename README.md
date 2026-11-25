@@ -110,7 +110,8 @@ fetch-run times), but this first version does not yet render that operational p9
 ### What is not guaranteed
 
 - Discord delivery is not exactly-once. A webhook timeout can mean Discord received the message but the response never
-  arrived. Those cases become `ambiguous` and require owner inspection/requeue instead of automatic reposting.
+  arrived. Those cases become `ambiguous` and require owner inspection plus either acknowledgement or requeue instead of
+  automatic reposting.
 - Cron invocation is at-least-once/best-effort. Missed invocations are not replayed as a precise schedule; the next tick
   uses source cadences and cursors.
 - Supabase Cron uses `pg_net` as transport. `pg_net` is not treated as the durable lead queue.

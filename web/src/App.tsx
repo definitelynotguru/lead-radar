@@ -12,7 +12,12 @@ import { LeadInbox } from "./components/LeadInbox";
 import { QueueStrip } from "./components/QueueStrip";
 import { SourceHealthStrip } from "./components/SourceHealthStrip";
 import { buildDemoSnapshot } from "./demoData";
-import { fetchSnapshot, postLeadAction, requeueProblemJob } from "./lib/api";
+import {
+  acknowledgeProblemJob,
+  fetchSnapshot,
+  postLeadAction,
+  requeueProblemJob,
+} from "./lib/api";
 import type { ApplicationStatus, DashboardSnapshot, LeadRow } from "./types";
 
 const API_STORAGE_KEY = "lead-radar:dashboard-api-url";
@@ -196,6 +201,26 @@ export default function App() {
     [config.apiUrl, config.token, demoMode, liveConfigured],
   );
 
+  const handleAcknowledge = useCallback(
+    async (jobId: string) => {
+      if (demoMode || !liveConfigured) return;
+      setBusyJobId(jobId);
+      try {
+        await acknowledgeProblemJob(config.apiUrl, config.token, jobId);
+        setRefreshIndex((value) => value + 1);
+      } catch (jobError) {
+        setError(
+          jobError instanceof Error
+            ? `Could not acknowledge job: ${jobError.message}`
+            : "Could not acknowledge job.",
+        );
+      } finally {
+        setBusyJobId(null);
+      }
+    },
+    [config.apiUrl, config.token, demoMode, liveConfigured],
+  );
+
   const totals = useMemo(() => {
     const inbox = snapshot.leads.filter(
       (lead) => !lead.application_status,
@@ -272,6 +297,7 @@ export default function App() {
           liveMode={!demoMode}
           busyJobId={busyJobId}
           onRequeue={(jobId) => void handleRequeue(jobId)}
+          onAcknowledge={(jobId) => void handleAcknowledge(jobId)}
         />
 
         <footer className="pb-5 text-center text-xs text-slate-500">

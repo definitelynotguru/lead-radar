@@ -87,3 +87,19 @@ export async function requeueProblemJob(
   });
   await parseResponse<{ ok: boolean }>(response);
 }
+
+export async function acknowledgeProblemJob(
+  apiUrl: string,
+  token: string,
+  jobId: string,
+): Promise<void> {
+  const response = await fetchWithLocalFallback(apiUrl, "/jobs/acknowledge", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ job_id: jobId }),
+  });
+  await parseResponse<{ ok: boolean }>(response);
+}

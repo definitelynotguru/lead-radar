@@ -651,6 +651,32 @@ begin
 end;
 $$;
 
+create or replace function acknowledge_ambiguous_job(p_job_id uuid)
+returns jobs
+language plpgsql
+as $$
+declare
+  v_result jobs%rowtype;
+begin
+  update jobs
+  set status = 'cancelled',
+      leased_at = null,
+      lease_expires_at = null,
+      lease_owner = null,
+      last_error = null,
+      completed_at = now()
+  where id = p_job_id
+    and status = 'ambiguous'
+  returning * into v_result;
+
+  if not found then
+    raise exception 'job % is not ambiguous', p_job_id;
+  end if;
+
+  return v_result;
+end;
+$$;
+
 create or replace function upsert_application_outcome(
   p_lead_id uuid,
   p_status application_status,
