@@ -1,0 +1,96 @@
+[
+  {
+    "by": "phw",
+    "id": 50342723,
+    "kids": [
+      50449336,
+      50342875,
+      50474578
+    ],
+    "parent": 50338728,
+    "text": "Fly.io | REMOTE (multiple countries) | Full time | $190k USD + equity<p>Hey folks, Fly.io is a developer-focused public cloud. We are currently hiring for three roles:<p>* Networking Engineer: Proxy and Corrosion - <a href=\"https:&#x2F;&#x2F;fly.io&#x2F;jobs&#x2F;networking-engineer&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;fly.io&#x2F;jobs&#x2F;networking-engineer&#x2F;</a><p>* Infrastructure Operations Engineer - <a href=\"https:&#x2F;&#x2F;fly.io&#x2F;jobs&#x2F;infra-engineer&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;fly.io&#x2F;jobs&#x2F;infra-engineer&#x2F;</a><p>* Fullstack Engineer - <a href=\"https:&#x2F;&#x2F;fly.io&#x2F;jobs&#x2F;fullstack-engineer&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;fly.io&#x2F;jobs&#x2F;fullstack-engineer&#x2F;</a><p>Here&#x27;s how we hire: <a href=\"https:&#x2F;&#x2F;docs.fly.io&#x2F;hiring\" rel=\"nofollow\">https:&#x2F;&#x2F;docs.fly.io&#x2F;hiring</a>",
+    "time": 1793649324,
+    "type": "comment"
+  },
+  {
+    "by": "mslzed",
+    "id": 50341570,
+    "kids": [
+      50508725
+    ],
+    "parent": 50338728,
+    "text": "Zed Industries | North America, South America, Europe REMOTE | <a href=\"https:&#x2F;&#x2F;zed.dev&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;zed.dev&#x2F;</a> Zed is a company for developers, by developers. All 3 of our founders have spent years in the trenches writing software and still do it almost every single day.\nWe&#x27;ve raised $42M to support our ultimate vision, a new way to collaborate on software, where conversations about code remain connected to the code itself, instead of being tied to aging snapshots or scattered across different tools. The first step was creating a high-quality editor to serve as the user interface. Now this new investment lets us expand to tackle the next phase of our plan. We&#x27;re developing a new kind of operation-based version control (<a href=\"https:&#x2F;&#x2F;delta.dev&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;delta.dev&#x2F;</a>) that incrementally tracks the evolution of your code with edit-level granularity, and we&#x27;re integrating it into Zed to make collaboration, both with agents and teammates, a first-class part of the coding experience.<p>What we look for and how we build - <a href=\"https:&#x2F;&#x2F;zed.dev&#x2F;blog&#x2F;hiring\" rel=\"nofollow\">https:&#x2F;&#x2F;zed.dev&#x2F;blog&#x2F;hiring</a><p>Backend Engineer, Cloud - <a href=\"https:&#x2F;&#x2F;zed.dev&#x2F;jobs&#x2F;backend-engineer\" rel=\"nofollow\">https:&#x2F;&#x2F;zed.dev&#x2F;jobs&#x2F;backend-engineer</a><p>Product Designer - <a href=\"https:&#x2F;&#x2F;zed.dev&#x2F;jobs&#x2F;product-designer\" rel=\"nofollow\">https:&#x2F;&#x2F;zed.dev&#x2F;jobs&#x2F;product-designer</a>",
+    "time": 1793645136,
+    "type": "comment"
+  },
+  {
+    "by": "DylanCZ",
+    "id": 50339881,
+    "kids": [
+      50344423
+    ],
+    "parent": 50338728,
+    "text": "Pond AI | San Francisco | Onsite | <a href=\"https:&#x2F;&#x2F;joinpond.ai\" rel=\"nofollow\">https:&#x2F;&#x2F;joinpond.ai</a><p>Most non-tech businesses know exactly which workflows they want AI agents to handle, but have no one to build, connect and run them. Pond delivers custom AI agents to these businesses through a network of 7k AI builders, with Pond as the platform and security layer over MCP.<p>We&#x27;re backed by Tier-1 VCs and a co-inventor of GPT.<p>We&#x27;re hiring two roles:<p>1) Head of Engineering (founding-level) | Full-time<p>We&#x27;re looking for a hands-on technical leader to own the platform end to end. You&#x27;d be a great fit if you:<p>- Build full-stack and ship AI agents in production (TypeScript&#x2F;Python, LLMs, tool use)\n- Have worked on payments, agent coordination&#x2F;MCP, or platform&#x2F;marketplace products\n- Have early-stage startup experience (founder, founding or early engineer) and like to grind<p>2) Marketer | Full-time or part-time<p>We&#x27;re looking for someone who understands content marketing, affiliate programs, and paid ads, and who has AI video experience. You should know the current AI video landscape well enough to create social assets with it.<p>You&#x27;ll work inside a highly AI-native operating process, including marketing work that hasn&#x27;t been built this way before. We&#x27;re looking to fill this as soon as possible.<p>Email dylan@joinpond.ai with something you&#x27;ve built or shipped, and mention HN.",
+    "time": 1793639018,
+    "type": "comment"
+  },
+  {
+    "by": "rossng",
+    "id": 50339468,
+    "parent": 50338728,
+    "text": "MONUMENTAL | <a href=\"https:&#x2F;&#x2F;www.monumental.co&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;www.monumental.co&#x2F;</a> | Amsterdam, The Netherlands | Full Time | Onsite<p>We make robots that autonomously construct buildings, starting with bricklaying.<p>There&#x27;s a lot of vapourware in robotics, but we&#x27;re deploying robots across multiple concurrent sites today - and generating revenue. In the last couple of months, our robots have built affordable social housing, health care living units, canal walls in the historic city centre of Amsterdam, and a youth sports centre. Help us to build things that matter in the long run.<p>We&#x27;re looking for experienced software engineers for many roles. You can help us solve problems like:<p>- Data sync and analytics queries across a fleet of robots (that can be offline for hours at a time)<p>- Modelling buildings in code and finding the right UI for operators to edit them<p>- Designing systems for robots to drive safely and fully autonomously around a building site<p>Check out the progress we&#x27;ve already made on Atrium, our operating system for robotics: <a href=\"https:&#x2F;&#x2F;www.monumental.co&#x2F;atrium\" rel=\"nofollow\">https:&#x2F;&#x2F;www.monumental.co&#x2F;atrium</a><p>We&#x27;re rapidly scaling up operations - we&#x27;re already hiring operators in the UK too - and we need experienced engineers who can build the systems that manage all of that complexity. If you think that &#x27;full-stack&#x27; could reasonably mean debugging firmware, mixing buckets of mortar _and_ writing React components, we are looking for you. Robotics experience not required!<p>Take a look inside our software stack: <a href=\"https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v=eh9BfQoKCy0\" rel=\"nofollow\">https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v=eh9BfQoKCy0</a><p><a href=\"https:&#x2F;&#x2F;www.monumental.co&#x2F;jobs\" rel=\"nofollow\">https:&#x2F;&#x2F;www.monumental.co&#x2F;jobs</a>",
+    "time": 1793637525,
+    "type": "comment"
+  },
+  {
+    "by": "jurajmasar",
+    "id": 50339853,
+    "kids": [
+      50390409,
+      50474575
+    ],
+    "parent": 50338728,
+    "text": "Better Stack | <a href=\"https:&#x2F;&#x2F;betterstack.com&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;betterstack.com&#x2F;</a> | &#x2F;^Full-?stack Engineer$&#x2F;i | Remote (North America &amp; Europe)<p>We are software builders at :heart: CEO is a software engineer, COO is a software engineer, and you guessed it, CTO is an engineer, too. We are engineers, making the tools we always wanted. If you love building amazing software, you&#x27;re at the right address.<p>We are looking for software engineers who, given enough time, could build Better Stack on their own = looking for full-stack product engineer generalists to help us create high-quality software with exceptional UX, end-to-end.<p>Apply at <a href=\"https:&#x2F;&#x2F;betterstack.com&#x2F;careers&#x2F;fullstack-engineer\" rel=\"nofollow\">https:&#x2F;&#x2F;betterstack.com&#x2F;careers&#x2F;fullstack-engineer</a><p>How we operate: <a href=\"https:&#x2F;&#x2F;betterstack.com&#x2F;careers\" rel=\"nofollow\">https:&#x2F;&#x2F;betterstack.com&#x2F;careers</a> \u2013 <a href=\"https:&#x2F;&#x2F;betterstack.com&#x2F;careers&#x2F;engineering\" rel=\"nofollow\">https:&#x2F;&#x2F;betterstack.com&#x2F;careers&#x2F;engineering</a> \u2013 <a href=\"https:&#x2F;&#x2F;juraj.blog&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;juraj.blog&#x2F;</a>",
+    "time": 1793638928,
+    "type": "comment"
+  },
+  {
+    "by": "AdriaanvRossum",
+    "id": 50338732,
+    "kids": [
+      50340467,
+      50348659,
+      50339964,
+      50377071,
+      50349492,
+      50376518,
+      50360938
+    ],
+    "parent": 50338728,
+    "text": "Simple Analytics | DevOps Engineer | REMOTE (worldwide, any timezone) | Full-time, 32h, 24h possible | \u20ac5,000&#x2F;month (full-time) | <a href=\"https:&#x2F;&#x2F;www.simpleanalytics.com&#x2F;jobs&#x2F;devops\" rel=\"nofollow\">https:&#x2F;&#x2F;www.simpleanalytics.com&#x2F;jobs&#x2F;devops</a><p>Hi HN, I&#x27;m Adriaan. Simple Analytics exists thanks to HN: it started with my Show HN in 2018 [1]. Today we&#x27;re a self-funded, profitable team of four building privacy-first analytics.<p>Privacy is why we run our own bare-metal servers instead of the cloud. We&#x27;re preparing for a LOT more traffic, and you&#x27;ll own the infrastructure and its reliability. We have good documentation. First project: leading the infra side of our Elasticsearch to ClickHouse migration, with Alex, our developer.<p>Stack: Ansible, OpenTofu, Docker Compose, Grafana, GitHub Actions, TypeScript. Clear async communication matters more than knowing every tool.<p>You can apply from your terminal:<p><pre><code>  curl https:&#x2F;&#x2F;www.simpleanalytics.com&#x2F;jobs&#x2F;devops.md\n</code></pre>\n[1] <a href=\"https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=18024277\">https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=18024277</a>",
+    "time": 1793635303,
+    "type": "comment"
+  },
+  {
+    "by": "anner_",
+    "id": 50339735,
+    "kids": [
+      50341889,
+      50369593,
+      50474569,
+      50378377
+    ],
+    "parent": 50338728,
+    "text": "Namespace | San Francisco, CA &#x2F; New York, NY &#x2F; Zurich, Switzerland &#x2F; Remote | Full-time | REMOTE or HYBRID | <a href=\"https:&#x2F;&#x2F;namespace.so\" rel=\"nofollow\">https:&#x2F;&#x2F;namespace.so</a><p>Namespace is a vertically integrated infrastructure stack for software development. We build everything ourselves, from the server racks to the hypervisor and scheduler, and we run it globally.<p>Teams at SpaceXAI, Ramp, Sierra, Fal, Vanta, Framer, ElevenLabs, and many others build their software on Namespace today.\nOpen roles (all full-time, global, remote &amp; hybrid):<p>Customer-Facing Software Engineer<p>Product Engineer<p>Infrastructure Software Engineer<p>Security Engineer<p>DevOps Engineer<p>Engineering Lead<p><i>Details and applications:</i> <a href=\"https:&#x2F;&#x2F;namespace.so&#x2F;careers\" rel=\"nofollow\">https:&#x2F;&#x2F;namespace.so&#x2F;careers</a>",
+    "time": 1793638537,
+    "type": "comment"
+  },
+  {
+    "by": "kreldjarn",
+    "id": 50349751,
+    "parent": 50338728,
+    "text": "Encube | ML Engineer, ML Ops Engineer | Stockholm, Sweden | ONSITE | Full-time<p>Encube is a platform where hardware teams look at their 3D designs and engineering drawings together and make better products faster. We&#x27;re building AI that understands those drawings and 3D models, and can eventually create them. Evaluations are a massive priority, and we need to consistently demonstrate how our models are better than frontier VLMs.<p>ML Engineer: train models that connect 2D drawings to 3D models, build agents that generate CAD and drawings, figure out how to measure if they&#x27;re actually good, and ship them to real customers. PyTorch. Bonus if you&#x27;ve worked with 3D, CAD or graph neural nets.<p>ML Ops Engineer: on-prem and AWS GPUs, make every experiment reproducible, keep costs down and customer data safe, and get rid of whatever slows the ML team down. SkyPilot, MLflow, PyTorch.<p><a href=\"https:&#x2F;&#x2F;www.getencube.com&#x2F;ml-engineer-oct-2026\" rel=\"nofollow\">https:&#x2F;&#x2F;www.getencube.com&#x2F;ml-engineer-oct-2026</a>\n<a href=\"https:&#x2F;&#x2F;www.getencube.com&#x2F;ml-ops-engineer-oct-2026\" rel=\"nofollow\">https:&#x2F;&#x2F;www.getencube.com&#x2F;ml-ops-engineer-oct-2026</a>",
+    "time": 1793697284,
+    "type": "comment"
+  }
+]
