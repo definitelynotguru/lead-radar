@@ -80,7 +80,7 @@ async function freshnessChecks(sql: Sql): Promise<Record<string, CheckStatus>> {
   const checks: Record<string, CheckStatus> = {};
 
   for (const row of rows) {
-    const reference = row.last_success_at ?? row.last_run_at ?? row.created_at;
+    const reference = row.last_success_at ?? row.created_at;
     const ageSeconds = (Date.now() - new Date(reference).getTime()) / 1000;
     const limit = maxAgeSeconds[row.source] ?? Math.max(row.cadence_seconds * 2, 10 * 60);
     checks[`${row.source}_freshness`] = {
