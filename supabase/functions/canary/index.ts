@@ -101,13 +101,25 @@ async function queueChecks(sql: Sql): Promise<Record<string, CheckStatus>> {
     group by status
   `;
   const counts = Object.fromEntries(rows.map((row) => [row.status, Number(row.count)]));
+  const deadLetterRows = await sql<Array<{ count: number }>>`
+    select count(*)::integer as count
+    from dead_letters
+  `;
   const backlog = (counts.pending ?? 0) + (counts.failed ?? 0);
+  const ambiguous = counts.ambiguous ?? 0;
+  const deadLetters = Number(deadLetterRows[0]?.count ?? 0);
   return {
     queue_backlog: {
       ok: backlog < 100,
-      detail: `${backlog} pending/failed job(s), ${counts.ambiguous ?? 0} ambiguous, ${
-        counts.dead_lettered ?? 0
-      } dead-lettered`,
+      detail: `${backlog} pending/failed job(s), ${ambiguous} ambiguous, ${deadLetters} dead-lettered`,
+    },
+    queue_dead_letters: {
+      ok: deadLetters === 0,
+      detail: deadLetters === 0 ? "dead-letter queue empty" : `${deadLetters} job(s) require requeue or cancellation`,
+    },
+    queue_ambiguous: {
+      ok: ambiguous === 0,
+      detail: ambiguous === 0 ? "no ambiguous deliveries" : `${ambiguous} uncertain Discord delivery(ies) require inspection`,
     },
   };
 }
