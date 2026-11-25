@@ -197,43 +197,6 @@ create table canary_runs (
 
 create index canary_runs_started_idx on canary_runs (started_at desc);
 
--- The dashboard is served by the bearer-token Edge Function, not Supabase Data API.
--- With no RLS policies, these tables are default-deny for anon/authenticated PostgREST roles.
-alter table leads enable row level security;
-alter table applications enable row level security;
-alter table outcomes enable row level security;
-alter table source_states enable row level security;
-alter table fetch_runs enable row level security;
-alter table jobs enable row level security;
-alter table job_attempts enable row level security;
-alter table dead_letters enable row level security;
-alter table canary_runs enable row level security;
-
-do $$
-declare
-  v_table_name text;
-  v_role text;
-begin
-  foreach v_role in array array['anon', 'authenticated', 'service_role'] loop
-    if exists (select 1 from pg_roles where rolname = v_role) then
-      foreach v_table_name in array array[
-        'leads',
-        'applications',
-        'outcomes',
-        'source_states',
-        'fetch_runs',
-        'jobs',
-        'job_attempts',
-        'dead_letters',
-        'canary_runs'
-      ] loop
-        execute format('revoke all on table public.%I from %I', v_table_name, v_role);
-      end loop;
-    end if;
-  end loop;
-end;
-$$;
-
 create or replace function set_updated_at()
 returns trigger
 language plpgsql
@@ -427,7 +390,6 @@ language plpgsql
 as $$
 declare
   v_job jobs%rowtype;
-  v_attempt_number integer;
   v_count integer := 0;
 begin
   for v_job in
@@ -437,11 +399,6 @@ begin
       and lease_expires_at < now()
     for update skip locked
   loop
-    select coalesce(max(attempt_number), 0) + 1
-    into v_attempt_number
-    from job_attempts
-    where job_id = v_job.id;
-
     insert into job_attempts (
       job_id,
       attempt_number,
@@ -450,7 +407,7 @@ begin
       worker_id
     ) values (
       v_job.id,
-      v_attempt_number,
+      v_job.attempts,
       'ambiguous',
       p_reason,
       v_job.lease_owner
@@ -521,7 +478,6 @@ declare
   v_result jobs%rowtype;
   v_final_status job_status;
   v_reason text;
-  v_attempt_number integer;
 begin
   if p_outcome not in ('success', 'retryable_failure', 'permanent_failure', 'ambiguous') then
     raise exception 'invalid job outcome: %', p_outcome;
@@ -540,11 +496,6 @@ begin
     raise exception 'job % is not claimed by worker %', p_job_id, p_worker_id;
   end if;
 
-  select coalesce(max(attempt_number), 0) + 1
-  into v_attempt_number
-  from job_attempts
-  where job_id = p_job_id;
-
   insert into job_attempts (
     job_id,
     attempt_number,
@@ -555,7 +506,7 @@ begin
     worker_id
   ) values (
     p_job_id,
-    v_attempt_number,
+    v_job.attempts,
     p_outcome,
     nullif(p_error, ''),
     p_response_status,
@@ -642,35 +593,6 @@ begin
 
   if not found then
     raise exception 'job % is not requeueable', p_job_id;
-  end if;
-
-  delete from dead_letters
-  where job_id = p_job_id;
-
-  return v_result;
-end;
-$$;
-
-create or replace function acknowledge_ambiguous_job(p_job_id uuid)
-returns jobs
-language plpgsql
-as $$
-declare
-  v_result jobs%rowtype;
-begin
-  update jobs
-  set status = 'cancelled',
-      leased_at = null,
-      lease_expires_at = null,
-      lease_owner = null,
-      last_error = null,
-      completed_at = now()
-  where id = p_job_id
-    and status = 'ambiguous'
-  returning * into v_result;
-
-  if not found then
-    raise exception 'job % is not ambiguous', p_job_id;
   end if;
 
   return v_result;
