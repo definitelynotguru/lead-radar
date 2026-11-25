@@ -8,3 +8,8 @@ coverage/
 *.log
 .supabase/
 supabase/.temp/
+.lead-radar-cron.generated.sql
+
+# local taste-skill and visual verification artifacts
+web/.taste-skill/
+web/shots/

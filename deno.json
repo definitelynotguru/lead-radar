@@ -1,0 +1,24 @@
+{
+  "nodeModulesDir": "none",
+  "tasks": {
+    "check": "deno check supabase/functions/ingest-tick/index.ts supabase/functions/canary/index.ts supabase/functions/dashboard-api/index.ts tests/unit/parsers_test.ts tests/unit/queue_test.ts tests/unit/hn_incremental_test.ts tests/unit/github_ingestion_test.ts tests/unit/auth_test.ts tests/unit/canary_checks_test.ts tests/unit/discord_test.ts tests/unit/fetch_json_test.ts tests/unit/health_test.ts tests/unit/ingest_test.ts tests/unit/jobs_test.ts tests/unit/remotive_ingestion_test.ts tests/integration/queue_sql_test.ts tests/integration/dashboard_api_test.ts",
+    "test": "deno test --allow-read tests/unit",
+    "test:integration": "deno test --allow-read --allow-env --allow-net --allow-run tests/integration",
+    "db:migrate": "deno run --allow-read --allow-env --allow-net scripts/apply-migrations.ts",
+    "fmt": "deno fmt supabase/functions tests docs scripts deno.json README.md supabase/config.jsonc",
+    "fmt:check": "deno fmt --check supabase/functions tests docs scripts deno.json README.md supabase/config.jsonc",
+    "lint": "deno lint supabase/functions tests"
+  },
+  "fmt": {
+    "lineWidth": 120,
+    "indentWidth": 2,
+    "singleQuote": false
+  },
+  "lint": {
+    "rules": {
+      "tags": [
+        "recommended"
+      ]
+    }
+  }
+}
