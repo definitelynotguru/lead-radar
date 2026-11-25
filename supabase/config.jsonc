@@ -1,0 +1,45 @@
+{
+  "$schema": "https://supabase.com/schemas/config/v1.json",
+  "project_id": "lead-radar",
+
+  "api": {
+    "enabled": true,
+    "port": 54321,
+    "schemas": ["public"],
+    "extra_search_path": ["public", "extensions"],
+    "max_rows": 1000
+  },
+
+  "db": {
+    "port": 54322,
+    "shadow_port": 54320,
+    "major_version": 17
+  },
+
+  "edge_runtime": {
+    "enabled": true,
+    "policy": "per_worker",
+    "deno_version": 2
+  },
+
+  "functions": {
+    "ingest-tick": {
+      "enabled": true,
+      "verify_jwt": false,
+      "import_map": "./functions/import_map.json",
+      "entrypoint": "./functions/ingest-tick/index.ts"
+    },
+    "canary": {
+      "enabled": true,
+      "verify_jwt": false,
+      "import_map": "./functions/import_map.json",
+      "entrypoint": "./functions/canary/index.ts"
+    },
+    "dashboard-api": {
+      "enabled": true,
+      "verify_jwt": false,
+      "import_map": "./functions/import_map.json",
+      "entrypoint": "./functions/dashboard-api/index.ts"
+    }
+  }
+}
