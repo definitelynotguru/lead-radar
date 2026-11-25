@@ -4,7 +4,7 @@ import type { IngestionOutput, JsonObject } from "../types.ts";
 import type { FetchJsonFn } from "./types.ts";
 
 const GITHUB_SEARCH_URL =
-  "https://api.github.com/search/issues?q=is%3Aissue%20is%3Aopen%20label%3Abounty&sort=created&order=desc&per_page=30&page=1";
+  "https://api.github.com/search/issues?q=is%3Aissue%20is%3Aopen%20is%3Apublic%20label%3Abounty&sort=created&order=desc&per_page=30&page=1";
 
 export async function fetchGitHubIngestion(
   _cursor: JsonObject,
