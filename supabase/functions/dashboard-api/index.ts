@@ -134,7 +134,22 @@ async function snapshot(sql: Sql): Promise<Row> {
   `;
 
   const problemJobs = await sql<Row[]>`
-    select j.*, coalesce(recent_attempts.attempts, '[]'::jsonb) as recent_attempts
+    select j.id,
+           j.type,
+           j.idempotency_key,
+           jsonb_build_object(
+             'title', j.payload->>'title',
+             'source', j.payload->>'source',
+             'external_id', j.payload->>'external_id'
+           ) as payload,
+           j.status,
+           j.attempts,
+           j.max_attempts,
+           j.run_at,
+           j.last_error,
+           j.last_response_status,
+           j.updated_at,
+           coalesce(recent_attempts.attempts, '[]'::jsonb) as recent_attempts
     from jobs j
     left join lateral (
       select jsonb_agg(row_to_json(attempt_rows)) as attempts
@@ -161,7 +176,7 @@ async function snapshot(sql: Sql): Promise<Row> {
   `;
 
   const deadLetters = await sql<Row[]>`
-    select id, job_id, type, idempotency_key, payload, attempts, reason, last_response_status, dead_at
+    select id, job_id, type, idempotency_key, attempts, reason, last_response_status, dead_at
     from dead_letters
     order by dead_at desc
     limit 20

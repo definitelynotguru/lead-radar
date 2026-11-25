@@ -120,7 +120,7 @@ export interface DeadLetterRow {
   job_id: string;
   type: string;
   idempotency_key: string;
-  payload: Record<string, unknown>;
+  payload?: Record<string, unknown>;
   attempts: number;
   reason: string;
   last_response_status: number | null;
