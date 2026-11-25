@@ -16,7 +16,7 @@ Deno.test("GitHub ingestion restricts bounty search to public repositories", asy
   assertEquals(query, "is:issue is:open is:public label:bounty");
 });
 
-Deno.test("GitHub ingestion treats incomplete upstream results as fatal", async () => {
+Deno.test("GitHub ingestion treats incomplete upstream results without usable leads as fatal", async () => {
   const fakeFetch: FetchJsonFn = async <T>(): Promise<{ data: T; status: number }> => {
     await Promise.resolve();
     return { data: { total_count: 1, incomplete_results: true, items: [] } as T, status: 200 };
@@ -24,4 +24,28 @@ Deno.test("GitHub ingestion treats incomplete upstream results as fatal", async 
 
   const output = await fetchGitHubIngestion({}, fakeFetch);
   assertEquals(output.fatalError?.includes("incomplete_results=true"), true);
+  assertEquals(output.errors, []);
+});
+
+Deno.test("GitHub ingestion keeps usable leads from incomplete upstream results partial", async () => {
+  const item = {
+    id: 42,
+    node_id: "issue-42",
+    number: 7,
+    title: "$100 bounty: fix search indexing",
+    body: "A real bounty description",
+    html_url: "https://github.com/example/repo/issues/7",
+    repository_url: "https://api.github.com/repos/example/repo",
+    created_at: "2026-01-01T00:00:00Z",
+    labels: [{ name: "bounty" }],
+  };
+  const fakeFetch: FetchJsonFn = async <T>(): Promise<{ data: T; status: number }> => {
+    await Promise.resolve();
+    return { data: { total_count: 1, incomplete_results: true, items: [item] } as T, status: 200 };
+  };
+
+  const output = await fetchGitHubIngestion({}, fakeFetch);
+  assertEquals(output.fatalError, undefined);
+  assertEquals(output.errors.length, 1);
+  assertEquals(output.leads.length, 1);
 });

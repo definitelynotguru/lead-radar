@@ -243,17 +243,21 @@ Deno.test("Postgres queue semantics survive duplicates, retries, crashes, and ou
       const leadRows = await sql<Array<{ id: string }>>`select id from leads limit 1`;
       const leadId = leadRows[0].id;
 
-      await sql`select upsert_application_outcome(${leadId}::uuid, 'applied'::application_status, null::text, now(), false)`;
-      await sql`select upsert_application_outcome(${leadId}::uuid, 'replied'::application_status, 'founder replied'::text, now(), false)`;
+      await sql`select upsert_application_outcome(${leadId}::uuid, 'applied'::application_status, 'owner research'::text, now(), false)`;
+      await sql`select upsert_application_outcome(${leadId}::uuid, 'replied'::application_status, null::text, now(), false)`;
 
-      const rows = await sql<Array<{ applications: number; outcomes: number; status: string }>>`
+      const rows = await sql<
+        Array<{ applications: number; outcomes: number; status: string; owner_notes: string | null }>
+      >`
         select (select count(*)::integer from applications where lead_id = ${leadId}::uuid) as applications,
                (select count(*)::integer from outcomes o join applications a on a.id = o.application_id where a.lead_id = ${leadId}::uuid) as outcomes,
-               (select status::text from applications where lead_id = ${leadId}::uuid) as status
+               (select status::text from applications where lead_id = ${leadId}::uuid) as status,
+               (select owner_notes from applications where lead_id = ${leadId}::uuid) as owner_notes
       `;
       assertEquals(rows[0].applications, 1);
       assertEquals(rows[0].outcomes, 2);
       assertEquals(rows[0].status, "replied");
+      assertEquals(rows[0].owner_notes, "owner research");
     });
 
     await t.step("all lead-radar tables are default-deny through row level security", async () => {

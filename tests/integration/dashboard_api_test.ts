@@ -1,4 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@1";
+import { createDatabase } from "../../supabase/functions/_shared/db.ts";
 
 const databaseUrl = Deno.env.get("TEST_DATABASE_URL");
 if (!databaseUrl) {
@@ -45,6 +46,9 @@ Deno.test("dashboard API rejects bad auth and invalid mutation input before data
     stderr: "null",
   }).spawn();
 
+  const sql = createDatabase(databaseUrl);
+  const insertedJobIds: string[] = [];
+
   try {
     await waitForServer(origin);
 
@@ -89,14 +93,51 @@ Deno.test("dashboard API rejects bad auth and invalid mutation input before data
     });
     assertEquals(malformedAcknowledgeId.status, 400);
 
+    const missingLead = await fetch(`${origin}/action`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ lead_id: crypto.randomUUID(), status: "applied" }),
+    });
+    assertEquals(missingLead.status, 404);
+
     const missingJob = await fetch(`${origin}/jobs/requeue`, {
       method: "POST",
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
       body: JSON.stringify({ job_id: crypto.randomUUID() }),
     });
     assertEquals(missingJob.status, 404);
+
+    const pendingRows = await sql<Array<{ id: string }>>`
+      insert into jobs (type, idempotency_key, payload)
+      values (
+        'discord_source_alert',
+        ${`dashboard-api-test-${crypto.randomUUID()}`},
+        ${sql.json({ title: "dashboard api test", message: "pending job" })}
+      )
+      returning id
+    `;
+    const pendingJobId = pendingRows[0].id;
+    insertedJobIds.push(pendingJobId);
+
+    const requeuePending = await fetch(`${origin}/jobs/requeue`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ job_id: pendingJobId }),
+    });
+    assertEquals(requeuePending.status, 409);
+
+    const acknowledgePending = await fetch(`${origin}/jobs/acknowledge`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ job_id: pendingJobId }),
+    });
+    assertEquals(acknowledgePending.status, 409);
   } finally {
     child.kill("SIGTERM");
     await child.status;
+    for (const jobId of insertedJobIds) {
+      await sql`delete from jobs where id = ${jobId}::uuid`;
+    }
+    await sql.end();
   }
 });

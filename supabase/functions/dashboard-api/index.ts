@@ -211,6 +211,11 @@ async function recordAction(sql: Sql, request: Request): Promise<Response> {
   }
   if (!isUuid(body.lead_id)) return corsJsonResponse({ error: "lead_id must be a UUID" }, 400);
 
+  const existing = await sql<Row[]>`
+    select id from leads where id = ${body.lead_id}::uuid
+  `;
+  if (!existing.length) return corsJsonResponse({ error: "lead not found" }, 404);
+
   const rows = await sql<Row[]>`
     select upsert_application_outcome(
       ${body.lead_id}::uuid,

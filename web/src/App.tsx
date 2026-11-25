@@ -15,6 +15,7 @@ import { buildDemoSnapshot } from "./demoData";
 import {
   acknowledgeProblemJob,
   fetchSnapshot,
+  normalizeDashboardApiUrl,
   postLeadAction,
   requeueProblemJob,
 } from "./lib/api";
@@ -31,12 +32,21 @@ const MetricsSection = lazy(() =>
 
 function readInitialConfig() {
   return {
-    apiUrl:
+    apiUrl: normalizeDashboardApiUrl(
       localStorage.getItem(API_STORAGE_KEY) ??
-      (import.meta.env.VITE_DASHBOARD_API_URL as string | undefined) ??
-      "",
+        (import.meta.env.VITE_DASHBOARD_API_URL as string | undefined) ??
+        "",
+    ),
     token: localStorage.getItem(TOKEN_STORAGE_KEY) ?? "",
   };
+}
+
+function actionableQueueCount(
+  rows: DashboardSnapshot["queue"]["counts"],
+): number {
+  return rows
+    .filter((row) => row.status !== "succeeded" && row.status !== "cancelled")
+    .reduce((sum, row) => sum + Number(row.count), 0);
 }
 
 function demoAction(
@@ -118,9 +128,10 @@ export default function App() {
   }, [config.apiUrl, config.token, liveConfigured, refreshIndex]);
 
   const saveConnection = useCallback((apiUrl: string, token: string) => {
-    localStorage.setItem(API_STORAGE_KEY, apiUrl.trim());
+    const normalizedUrl = normalizeDashboardApiUrl(apiUrl);
+    localStorage.setItem(API_STORAGE_KEY, normalizedUrl);
     localStorage.setItem(TOKEN_STORAGE_KEY, token.trim());
-    setConfig({ apiUrl: apiUrl.trim(), token: token.trim() });
+    setConfig({ apiUrl: normalizedUrl, token: token.trim() });
   }, []);
 
   const useDemo = useCallback(() => {
@@ -229,22 +240,16 @@ export default function App() {
       (lead) =>
         lead.application_status && lead.application_status !== "ignored",
     ).length;
-    const pendingJobs = snapshot.queue.counts
-      .filter((row) => row.status === "pending" || row.status === "failed")
-      .reduce((sum, row) => sum + Number(row.count), 0);
-    return { leads: snapshot.leads.length, inbox, applied, pendingJobs };
+    const activeJobs = actionableQueueCount(snapshot.queue.counts);
+    return { leads: snapshot.leads.length, inbox, applied, activeJobs };
   }, [snapshot]);
-
-  const queueTotal = snapshot.queue.counts
-    .filter((row) => row.status !== "succeeded" && row.status !== "cancelled")
-    .reduce((sum, row) => sum + Number(row.count), 0);
 
   return (
     <div className="app-shell">
       <Sidebar
         live={!demoMode}
         endpoint={config.apiUrl}
-        counts={{ inbox: totals.inbox, queue: queueTotal }}
+        counts={{ inbox: totals.inbox, queue: totals.activeJobs }}
       />
       <div className="main-shell">
         <header className="topbar" id="overview" data-enter>
@@ -322,9 +327,12 @@ export default function App() {
                 <div className="eyebrow">Backlog</div>
                 <h2>Queue pressure</h2>
                 <p className="hero-number queue-pressure-number">
-                  {totals.pendingJobs}
+                  {totals.activeJobs}
                 </p>
-                <p className="section-copy">pending or retrying Discord work</p>
+                <p className="section-copy">
+                  active or inspectable Discord work; excludes succeeded and
+                  cancelled jobs
+                </p>
               </section>
             </div>
           </div>

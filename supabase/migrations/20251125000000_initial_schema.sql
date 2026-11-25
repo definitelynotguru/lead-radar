@@ -629,7 +629,7 @@ begin
   )
   on conflict (lead_id) do update
   set status = excluded.status,
-      owner_notes = excluded.owner_notes,
+      owner_notes = coalesce(excluded.owner_notes, applications.owner_notes),
       applied_at = case
         when excluded.status = 'applied' then coalesce(applications.applied_at, excluded.applied_at, now())
         else applications.applied_at

@@ -28,6 +28,10 @@ export async function fetchGitHubIngestion(
     .sort()
     .at(-1) ?? null;
 
+  const incompleteError = response.data.incomplete_results === true
+    ? "GitHub Search returned incomplete_results=true; treating the page as incomplete"
+    : undefined;
+
   return {
     leads,
     cursor: {
@@ -44,10 +48,8 @@ export async function fetchGitHubIngestion(
       parsed: leads.length,
       authenticated: Boolean(githubToken),
     },
-    errors: [],
-    fatalError: response.data.incomplete_results === true
-      ? "GitHub Search returned incomplete_results=true; treating the truncated page as a fetch failure"
-      : undefined,
+    errors: incompleteError && leads.length > 0 ? [incompleteError] : [],
+    fatalError: incompleteError && leads.length === 0 ? incompleteError : undefined,
     lastItemSeenAt: latestPostedAt,
   };
 }
