@@ -237,8 +237,8 @@ export default function App() {
 
   return (
     <main className="min-h-screen bg-ink text-slate-200">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,138,61,0.13),transparent_34%),radial-gradient(circle_at_top_right,rgba(96,165,250,0.16),transparent_34%),linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:auto,auto,42px_42px,42px_42px]" />
-      <div className="relative mx-auto flex max-w-7xl flex-col gap-5 px-4 py-5 md:px-6 lg:px-8">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_20%_-10%,rgba(255,138,61,0.12),transparent_30%),radial-gradient(circle_at_85%_0%,rgba(96,165,250,0.14),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.025),transparent_26rem)]" />
+      <div className="relative mx-auto flex max-w-[1440px] flex-col gap-6 px-4 py-5 md:px-6 lg:px-8">
         <Header
           demoMode={demoMode}
           loading={loading}
@@ -256,7 +256,7 @@ export default function App() {
           onUseDemo={useDemo}
         />
 
-        <section className="grid gap-4 md:grid-cols-4">
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {[
             ["Visible leads", totals.leads, "latest snapshot window"],
             ["Needs triage", totals.inbox, "no owner outcome yet"],
@@ -265,33 +265,35 @@ export default function App() {
           ].map(([label, value, hint]) => (
             <div
               key={label}
-              className="rounded-3xl border border-line bg-panel/75 p-4 backdrop-blur"
+              className="rounded-3xl border border-white/10 bg-white/[0.045] p-5 backdrop-blur"
             >
-              <div className="text-sm text-mist">{label}</div>
-              <div className="mt-2 text-3xl font-semibold tracking-tight text-white">
+              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                {label}
+              </div>
+              <div className="mt-3 text-4xl font-semibold tracking-[-0.04em] text-white">
                 {value}
               </div>
-              <div className="mt-1 text-xs text-slate-500">{hint}</div>
+              <div className="mt-1.5 text-sm text-slate-500">{hint}</div>
             </div>
           ))}
         </section>
 
         <SourceHealthStrip rows={snapshot.source_health} />
+        <LeadInbox
+          leads={snapshot.leads}
+          busyLeadId={busyLeadId}
+          onAction={(lead, status) => void handleLeadAction(lead, status)}
+        />
         <Suspense
           fallback={
             <div
-              className="panel h-96 animate-pulse"
+              className="h-96 animate-pulse rounded-[1.75rem] border border-white/10 bg-white/[0.04]"
               aria-label="Loading metrics"
             />
           }
         >
           <MetricsSection snapshot={snapshot} />
         </Suspense>
-        <LeadInbox
-          leads={snapshot.leads}
-          busyLeadId={busyLeadId}
-          onAction={(lead, status) => void handleLeadAction(lead, status)}
-        />
         <QueueStrip
           queue={snapshot.queue}
           liveMode={!demoMode}
