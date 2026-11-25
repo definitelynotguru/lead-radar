@@ -55,11 +55,27 @@ async function snapshot(sql: Sql): Promise<Row> {
   const replyRates = await sql<Row[]>`
     select l.source::text as source,
            count(a.id) filter (where a.status <> 'ignored')::integer as applications,
-           count(a.id) filter (where a.status in ('replied', 'interview', 'offer'))::integer as replies,
+           count(a.id) filter (
+             where a.status <> 'ignored'
+               and exists (
+                 select 1
+                 from outcomes o
+                 where o.application_id = a.id
+                   and o.kind in ('replied', 'interview', 'offer')
+               )
+           )::integer as replies,
            case
              when count(a.id) filter (where a.status <> 'ignored') = 0 then 0
              else round(
-               (count(a.id) filter (where a.status in ('replied', 'interview', 'offer'))::numeric /
+               (count(a.id) filter (
+                 where a.status <> 'ignored'
+                   and exists (
+                     select 1
+                     from outcomes o
+                     where o.application_id = a.id
+                       and o.kind in ('replied', 'interview', 'offer')
+                   )
+               )::numeric /
                 count(a.id) filter (where a.status <> 'ignored')::numeric) * 100,
                1
              )
