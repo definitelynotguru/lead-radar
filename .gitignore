@@ -8,3 +8,4 @@ coverage/
 *.log
 .supabase/
 supabase/.temp/
+.lead-radar-cron.generated.sql
