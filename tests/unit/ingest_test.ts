@@ -47,6 +47,7 @@ function githubBountyItem() {
 function fakeIngestionSql(state: SourceStateRow) {
   const runId = crypto.randomUUID();
   const finalizeStatuses: string[] = [];
+  const finalizeCursors: unknown[] = [];
 
   async function tagged(strings: TemplateStringsArray, ...values: unknown[]): Promise<unknown[]> {
     await Promise.resolve();
@@ -56,7 +57,9 @@ function fakeIngestionSql(state: SourceStateRow) {
       return [{ ingest_leads_batch: { inserted: 0, duplicates: 0, lead_ids: [] } }];
     }
     if (text.includes("finalize_fetch_run")) {
-      finalizeStatuses.push(String(values[2]));
+      const literalErrorFinalize = text.includes("'error'");
+      finalizeStatuses.push(literalErrorFinalize ? "error" : String(values[2]));
+      finalizeCursors.push(literalErrorFinalize ? null : values[8]);
       return [];
     }
     if (text.includes("select consecutive_failures")) return [{ consecutive_failures: 0 }];
@@ -69,7 +72,7 @@ function fakeIngestionSql(state: SourceStateRow) {
     json: (value: unknown) => value,
     begin: async (callback: (tx: Sql) => Promise<void>) => await callback(sql as Sql),
   }) as unknown as Sql;
-  return { sql, finalizeStatuses };
+  return { sql, finalizeStatuses, finalizeCursors };
 }
 
 async function withMockedGitHubSearch(
@@ -119,4 +122,21 @@ Deno.test("runSourceIngestion persists fatal, partial, and clean outputs as erro
     });
     assertEquals(harness.finalizeStatuses, [testCase.expected], testCase.name);
   }
+});
+
+Deno.test("runSourceIngestion finalizes a throwing fetch as error without advancing the cursor", async () => {
+  const sourceState = state(null);
+  const harness = fakeIngestionSql(sourceState);
+  const original = globalThis.fetch;
+  globalThis.fetch = () => Promise.resolve(new Response("unavailable", { status: 503 }));
+  try {
+    const summary = await runSourceIngestion(harness.sql, sourceState, runtimeEnv);
+    assertEquals(summary.status, "error");
+    assertEquals(summary.error?.includes("HTTP 503"), true);
+  } finally {
+    globalThis.fetch = original;
+  }
+
+  assertEquals(harness.finalizeStatuses, ["error"]);
+  assertEquals(harness.finalizeCursors, [null]);
 });

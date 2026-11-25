@@ -4,6 +4,7 @@ import { corsHeaders, corsJsonResponse } from "../_shared/http.ts";
 import { serveEntrypoint } from "../_shared/serve.ts";
 
 const APPLICATION_STATUSES = new Set(["applied", "ignored", "replied", "rejected", "interview", "offer", "closed"]);
+const MAX_OWNER_NOTES_LENGTH = 2000;
 
 type Row = Record<string, unknown>;
 
@@ -210,6 +211,9 @@ async function recordAction(sql: Sql, request: Request): Promise<Response> {
     return corsJsonResponse({ error: "lead_id and a valid status are required" }, 400);
   }
   if (!isUuid(body.lead_id)) return corsJsonResponse({ error: "lead_id must be a UUID" }, 400);
+  if (typeof body.notes === "string" && body.notes.length > MAX_OWNER_NOTES_LENGTH) {
+    return corsJsonResponse({ error: "notes must be at most 2000 characters" }, 400);
+  }
 
   const existing = await sql<Row[]>`
     select id from leads where id = ${body.lead_id}::uuid
@@ -229,7 +233,7 @@ async function recordAction(sql: Sql, request: Request): Promise<Response> {
 }
 
 async function requeueJob(sql: Sql, request: Request): Promise<Response> {
-  const body = await request.json().catch(() => null) as { job_id?: string; reset_attempts?: boolean } | null;
+  const body = await request.json().catch(() => null) as { job_id?: string } | null;
   if (!body?.job_id) return corsJsonResponse({ error: "job_id is required" }, 400);
   if (!isUuid(body.job_id)) return corsJsonResponse({ error: "job_id must be a UUID" }, 400);
 
@@ -241,7 +245,7 @@ async function requeueJob(sql: Sql, request: Request): Promise<Response> {
   try {
     const rows = await sql<Row[]>`
       select row_to_json(job) as job
-      from requeue_job(${body.job_id}::uuid, 0, ${body.reset_attempts !== false}) as job
+      from requeue_job(${body.job_id}::uuid, 0) as job
     `;
     return corsJsonResponse({ ok: true, job: rows[0]?.job ?? null });
   } catch (error) {

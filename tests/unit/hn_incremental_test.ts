@@ -95,3 +95,35 @@ Deno.test("HN ingestion rediscovers promptly after monthly rollover and resets t
   assertEquals(december.diagnostics.unseen_before, decemberComments.length);
   assert(!(december.cursor.seen_ids as number[]).includes(123456789));
 });
+
+Deno.test("HN ingestion preserves rediscovery errors when reusing a cached thread", async () => {
+  const thread: HnItem = {
+    id: 700,
+    type: "story",
+    title: "Ask HN: Who is hiring? (November 2026)",
+    time: Math.floor(NOVEMBER_2026.getTime() / 1000),
+    kids: [],
+  };
+  const user: HnUser = { id: "whoishiring", submitted: [699, 700] };
+  const fakeFetch: FetchJsonFn = async <T>(url: string): Promise<{ data: T; status: number }> => {
+    await Promise.resolve();
+    if (url.endsWith("/user/whoishiring.json")) return { data: user as T, status: 200 };
+    if (url.endsWith("/item/699.json")) throw new Error("discovery fetch failed");
+    if (url.endsWith("/item/700.json")) return { data: thread as T, status: 200 };
+    throw new Error(`unexpected URL: ${url}`);
+  };
+  const cursor = {
+    thread_id: 700,
+    thread_title: thread.title ?? null,
+    thread_posted_at: NOVEMBER_2026.toISOString(),
+    discovery_checked_at: "2026-11-25T00:00:00.000Z",
+    seen_ids: [],
+    backfill_complete: true,
+  };
+
+  const output = await fetchHnIngestion(cursor, fakeFetch, NOVEMBER_2026);
+
+  assertEquals(output.errors.length, 1);
+  assertEquals(output.errors[0].includes("discovery fetch failed"), true);
+  assertEquals(output.diagnostics.discovery_errors, 1);
+});

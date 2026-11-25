@@ -106,9 +106,11 @@ export async function fetchHnIngestion(
   let threadPostedAt = cursor.thread_posted_at;
   let discoveryCheckedAt = cursor.discovery_checked_at;
   let threadChanged = false;
+  let rediscoveryErrors: string[] = [];
 
   if (!threadId || discoveryStale) {
     const discovery = await discoverThread(fetcher);
+    rediscoveryErrors = discovery.errors;
     discoveryCheckedAt = nowIso;
     if (discovery.thread?.id && discovery.thread.time) {
       threadChanged = threadId !== discovery.thread.id;
@@ -128,7 +130,7 @@ export async function fetchHnIngestion(
           thread_discovery: "missing",
           checked_submission_ids: discovery.checkedIds,
         },
-        errors: [...errors, ...discovery.errors],
+        errors: [...errors, ...rediscoveryErrors],
       };
     }
   }
@@ -155,7 +157,7 @@ export async function fetchHnIngestion(
       return null;
     }
   });
-  errors.push(...fetchFailures);
+  errors.push(...rediscoveryErrors, ...fetchFailures);
 
   const successfulItems = fetchedItems.filter((item): item is HnItem => item !== null);
   const leads: NormalizedLead[] = parseHnComments(successfulItems, threadId);
@@ -193,6 +195,7 @@ export async function fetchHnIngestion(
       remaining_after_tick: remainingIds.length,
       backfill_complete: backfillComplete,
       fetch_failures: fetchFailures.length,
+      discovery_errors: rediscoveryErrors.length,
     },
     errors,
     lastItemSeenAt: latestPostedAt,

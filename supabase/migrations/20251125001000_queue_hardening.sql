@@ -42,7 +42,6 @@ language plpgsql
 as $$
 declare
   v_job jobs%rowtype;
-  v_attempt_number integer;
   v_count integer := 0;
 begin
   for v_job in
@@ -52,10 +51,18 @@ begin
       and lease_expires_at < now()
     for update skip locked
   loop
-    select coalesce(max(attempt_number), 0) + 1
-    into v_attempt_number
-    from job_attempts
-    where job_id = v_job.id;
+    update jobs
+    set status = 'ambiguous',
+        leased_at = null,
+        lease_expires_at = null,
+        lease_owner = null,
+        last_error = p_reason
+    where id = v_job.id
+      and status = 'claimed';
+
+    if not found then
+      continue;
+    end if;
 
     insert into job_attempts (
       job_id,
@@ -65,21 +72,12 @@ begin
       worker_id
     ) values (
       v_job.id,
-      v_attempt_number,
+      v_job.attempts,
       'ambiguous',
       p_reason,
       v_job.lease_owner
     )
     on conflict (job_id, attempt_number) do nothing;
-
-    update jobs
-    set status = 'ambiguous',
-        leased_at = null,
-        lease_expires_at = null,
-        lease_owner = null,
-        last_error = p_reason
-    where id = v_job.id
-      and status = 'claimed';
 
     v_count := v_count + 1;
   end loop;
@@ -124,10 +122,7 @@ begin
     raise exception 'job % is not claimed by worker %', p_job_id, p_worker_id;
   end if;
 
-  select coalesce(max(attempt_number), 0) + 1
-  into v_attempt_number
-  from job_attempts
-  where job_id = p_job_id;
+  v_attempt_number := v_job.attempts;
 
   insert into job_attempts (
     job_id,
@@ -202,8 +197,7 @@ $$;
 
 create or replace function requeue_job(
   p_job_id uuid,
-  p_delay_seconds integer default 0,
-  p_reset_attempts boolean default true
+  p_delay_seconds integer default 0
 )
 returns jobs
 language plpgsql
@@ -213,7 +207,6 @@ declare
 begin
   update jobs
   set status = 'pending',
-      attempts = case when p_reset_attempts then 0 else attempts end,
       run_at = now() + make_interval(secs => greatest(0, p_delay_seconds)),
       leased_at = null,
       lease_expires_at = null,

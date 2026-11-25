@@ -69,7 +69,7 @@ export async function requeueProblemJob(
       authorization: `Bearer ${token}`,
       "content-type": "application/json",
     },
-    body: JSON.stringify({ job_id: jobId, reset_attempts: true }),
+    body: JSON.stringify({ job_id: jobId }),
   });
   await parseResponse<{ ok: boolean }>(response);
 }

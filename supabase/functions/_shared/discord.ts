@@ -34,6 +34,7 @@ export function buildDiscordMessage(job: JobRow): Record<string, unknown> {
 
     return {
       username: "lead-radar",
+      allowed_mentions: { parse: [] },
       embeds: [{
         title: truncate(stringField(job.payload, "title") ?? "New lead", 240),
         url: stringField(job.payload, "canonical_url"),
@@ -53,6 +54,7 @@ export function buildDiscordMessage(job: JobRow): Record<string, unknown> {
   const source = stringField(job.payload, "source");
   return {
     username: "lead-radar",
+    allowed_mentions: { parse: [] },
     embeds: [{
       title: truncate(title, 240),
       description: truncate(message, 900),

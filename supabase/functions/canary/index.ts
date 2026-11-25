@@ -1,4 +1,5 @@
 import { hasValidSharedSecret } from "../_shared/auth.ts";
+import { evaluateQueueCounts } from "../_shared/canary_checks.ts";
 import { createDatabase, readRuntimeEnv, type Sql } from "../_shared/db.ts";
 import { enqueueOperationalJob } from "../_shared/health.ts";
 import { jsonResponse } from "../_shared/http.ts";
@@ -105,25 +106,8 @@ async function queueChecks(sql: Sql): Promise<Record<string, CheckStatus>> {
     select count(*)::integer as count
     from dead_letters
   `;
-  const backlog = (counts.pending ?? 0) + (counts.failed ?? 0);
-  const ambiguous = counts.ambiguous ?? 0;
   const deadLetters = Number(deadLetterRows[0]?.count ?? 0);
-  return {
-    queue_backlog: {
-      ok: backlog < 100,
-      detail: `${backlog} pending/failed job(s), ${ambiguous} ambiguous, ${deadLetters} dead-lettered`,
-    },
-    queue_dead_letters: {
-      ok: deadLetters === 0,
-      detail: deadLetters === 0 ? "dead-letter queue empty" : `${deadLetters} job(s) require requeue or cancellation`,
-    },
-    queue_ambiguous: {
-      ok: ambiguous === 0,
-      detail: ambiguous === 0
-        ? "no ambiguous deliveries"
-        : `${ambiguous} uncertain Discord delivery(ies) require inspection`,
-    },
-  };
+  return evaluateQueueCounts(counts, deadLetters);
 }
 
 async function alertForFailures(sql: Sql, checks: Record<string, CheckStatus>): Promise<void> {

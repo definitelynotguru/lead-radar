@@ -68,7 +68,8 @@ create table applications (
   is_demo boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint applications_lead_id_key unique (lead_id)
+  constraint applications_lead_id_key unique (lead_id),
+  constraint applications_owner_notes_length check (owner_notes is null or length(owner_notes) <= 2000)
 );
 
 create index applications_status_idx on applications (status, updated_at desc);
@@ -80,7 +81,8 @@ create table outcomes (
   occurred_at timestamptz not null default now(),
   notes text,
   is_demo boolean not null default false,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  constraint outcomes_notes_length check (notes is null or length(notes) <= 2000)
 );
 
 create index outcomes_application_time_idx on outcomes (application_id, occurred_at desc);
@@ -399,6 +401,19 @@ begin
       and lease_expires_at < now()
     for update skip locked
   loop
+    update jobs
+    set status = 'ambiguous',
+        leased_at = null,
+        lease_expires_at = null,
+        lease_owner = null,
+        last_error = p_reason
+    where id = v_job.id
+      and status = 'claimed';
+
+    if not found then
+      continue;
+    end if;
+
     insert into job_attempts (
       job_id,
       attempt_number,
@@ -413,15 +428,6 @@ begin
       v_job.lease_owner
     )
     on conflict (job_id, attempt_number) do nothing;
-
-    update jobs
-    set status = 'ambiguous',
-        leased_at = null,
-        lease_expires_at = null,
-        lease_owner = null,
-        last_error = p_reason
-    where id = v_job.id
-      and status = 'claimed';
 
     v_count := v_count + 1;
   end loop;
@@ -569,8 +575,7 @@ $$;
 
 create or replace function requeue_job(
   p_job_id uuid,
-  p_delay_seconds integer default 0,
-  p_reset_attempts boolean default true
+  p_delay_seconds integer default 0
 )
 returns jobs
 language plpgsql
@@ -580,7 +585,6 @@ declare
 begin
   update jobs
   set status = 'pending',
-      attempts = case when p_reset_attempts then 0 else attempts end,
       run_at = now() + make_interval(secs => greatest(0, p_delay_seconds)),
       leased_at = null,
       lease_expires_at = null,
@@ -588,7 +592,7 @@ begin
       last_error = null,
       completed_at = null
   where id = p_job_id
-    and status in ('failed', 'ambiguous', 'dead_lettered', 'cancelled')
+    and status in ('failed', 'ambiguous', 'dead_lettered')
   returning * into v_result;
 
   if not found then

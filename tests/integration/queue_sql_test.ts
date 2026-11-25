@@ -109,7 +109,7 @@ Deno.test("Postgres queue semantics survive duplicates, retries, crashes, and ou
       assertEquals(finalRows[0].attempt_count, 2);
 
       const requeued = await sql<Array<{ status: string }>>`
-        select status::text from requeue_job(${jobId}::uuid, 0, true)
+        select status::text from requeue_job(${jobId}::uuid, 0)
       `;
       assertEquals(requeued[0].status, "pending");
       const remainingDeadRows = await sql<Array<{ count: number }>>`
@@ -169,18 +169,29 @@ Deno.test("Postgres queue semantics survive duplicates, retries, crashes, and ou
       `;
       assertEquals(unchanged[0].status, "ambiguous");
 
+      const secondSweep = await sql<Array<{ mark_expired_claims_ambiguous: number }>>`
+        select mark_expired_claims_ambiguous()
+      `;
+      assertEquals(secondSweep[0].mark_expired_claims_ambiguous, 0);
+      const singleAmbiguousAttempt = await sql<Array<{ count: number }>>`
+        select count(*)::integer as count
+        from job_attempts
+        where job_id = ${jobId}::uuid and status = 'ambiguous'
+      `;
+      assertEquals(singleAmbiguousAttempt[0].count, 1);
+
       const requeued = await sql<Array<{ status: string; attempts: number }>>`
         select status::text, attempts
-        from requeue_job(${jobId}::uuid, 0, true)
+        from requeue_job(${jobId}::uuid, 0)
       `;
       assertEquals(requeued[0].status, "pending");
-      assertEquals(requeued[0].attempts, 0);
+      assertEquals(requeued[0].attempts, 1);
 
       const reclaimed = await sql<Array<{ id: string; attempts: number }>>`
         select id, attempts from claim_due_jobs('recovery-worker', 10, 120)
       `;
       assertEquals(reclaimed[0]?.id, jobId);
-      assertEquals(reclaimed[0]?.attempts, 1);
+      assertEquals(reclaimed[0]?.attempts, 2);
       await sql`
         select complete_job(
           ${jobId}::uuid,
@@ -228,7 +239,7 @@ Deno.test("Postgres queue semantics survive duplicates, retries, crashes, and ou
       `;
       assertEquals(attemptCount[0].count, 1);
       await assertRejects(
-        () => sql`select requeue_job(${jobId}::uuid, 0, true)`,
+        () => sql`select requeue_job(${jobId}::uuid, 0)`,
         Error,
         "not requeueable",
       );

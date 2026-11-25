@@ -1,5 +1,9 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { executeDiscordJob, sendDiscordWebhook } from "../../supabase/functions/_shared/discord.ts";
+import {
+  buildDiscordMessage,
+  executeDiscordJob,
+  sendDiscordWebhook,
+} from "../../supabase/functions/_shared/discord.ts";
 import type { JobRow } from "../../supabase/functions/_shared/types.ts";
 
 async function withMockedFetch(
@@ -88,6 +92,23 @@ Deno.test("Discord 429 honors Retry-After headers and falls back to JSON when in
       assertEquals(result.retryAfterSeconds, 7);
     },
   );
+});
+
+Deno.test("Discord messages disable mention parsing for untrusted lead content", () => {
+  const leadJob = job("mention-test");
+  leadJob.type = "discord_lead_alert";
+  leadJob.payload = {
+    source: "hn",
+    title: "@everyone remote job",
+    description_snippet: "@here click this lure",
+    canonical_url: "https://example.test/job",
+  };
+
+  const message = buildDiscordMessage(leadJob) as { allowed_mentions?: { parse?: unknown[] } };
+  assertEquals(message.allowed_mentions?.parse, []);
+
+  const operational = buildDiscordMessage(job()) as { allowed_mentions?: { parse?: unknown[] } };
+  assertEquals(operational.allowed_mentions?.parse, []);
 });
 
 Deno.test("executeDiscordJob retries configuration failure without a network call", async () => {

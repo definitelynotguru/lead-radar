@@ -48,6 +48,7 @@ Deno.test("dashboard API rejects bad auth and invalid mutation input before data
 
   const sql = createDatabase(databaseUrl);
   const insertedJobIds: string[] = [];
+  const insertedLeadIds: string[] = [];
 
   try {
     await waitForServer(origin);
@@ -93,6 +94,40 @@ Deno.test("dashboard API rejects bad auth and invalid mutation input before data
     });
     assertEquals(malformedAcknowledgeId.status, 400);
 
+    const leadRows = await sql<Array<{ id: string }>>`
+      insert into leads (source, external_id, canonical_url, title, description, ingestion_hash)
+      values (
+        'hn',
+        ${`dashboard-api-notes-${crypto.randomUUID()}`},
+        'https://example.test/notes-lead',
+        'Dashboard API notes test',
+        'notes boundary test',
+        'test-hash'
+      )
+      returning id
+    `;
+    const notesLeadId = leadRows[0].id;
+    insertedLeadIds.push(notesLeadId);
+
+    const acceptedNotes = await fetch(`${origin}/action`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ lead_id: notesLeadId, status: "applied", notes: "x".repeat(2000) }),
+    });
+    assertEquals(acceptedNotes.status, 200);
+
+    const oversizedNotes = await fetch(`${origin}/action`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ lead_id: notesLeadId, status: "replied", notes: "x".repeat(2001) }),
+    });
+    assertEquals(oversizedNotes.status, 400);
+
+    const storedNotes = await sql<Array<{ owner_notes: string | null }>>`
+      select owner_notes from applications where lead_id = ${notesLeadId}::uuid
+    `;
+    assertEquals(storedNotes[0].owner_notes?.length, 2000);
+
     const missingLead = await fetch(`${origin}/action`, {
       method: "POST",
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
@@ -137,6 +172,9 @@ Deno.test("dashboard API rejects bad auth and invalid mutation input before data
     await child.status;
     for (const jobId of insertedJobIds) {
       await sql`delete from jobs where id = ${jobId}::uuid`;
+    }
+    for (const leadId of insertedLeadIds) {
+      await sql`delete from leads where id = ${leadId}::uuid`;
     }
     await sql.end();
   }

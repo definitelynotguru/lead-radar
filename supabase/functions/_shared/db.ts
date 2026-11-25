@@ -26,7 +26,7 @@ export function readRuntimeEnv(): RuntimeEnv {
     discordWebhookUrl: Deno.env.get("DISCORD_WEBHOOK_URL") ?? undefined,
     githubToken: Deno.env.get("GITHUB_TOKEN") ?? undefined,
     ingestSecret: Deno.env.get("INGEST_SHARED_SECRET") ?? undefined,
-    canarySecret: Deno.env.get("CANARY_SHARED_SECRET") ?? Deno.env.get("INGEST_SHARED_SECRET") ?? undefined,
+    canarySecret: Deno.env.get("CANARY_SHARED_SECRET") ?? undefined,
     dashboardAccessToken: Deno.env.get("DASHBOARD_ACCESS_TOKEN") ?? undefined,
     healthchecksPingUrl: Deno.env.get("HEALTHCHECKS_PING_URL") ?? undefined,
     healthchecksCanaryPingUrl: Deno.env.get("HEALTHCHECKS_CANARY_PING_URL") ?? undefined,

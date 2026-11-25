@@ -75,6 +75,19 @@ select cron.schedule(
   where ja.job_id = j.id
     and j.status in ('succeeded', 'cancelled')
     and j.completed_at < now() - interval '30 days';
+
+  with old_attempts as (
+    select ja.id
+    from job_attempts ja
+    join jobs j on j.id = ja.job_id
+    where j.status in ('failed', 'ambiguous', 'dead_lettered')
+      and ja.finished_at < now() - interval '30 days'
+    order by ja.finished_at asc
+    limit 5000
+  )
+  delete from job_attempts ja
+  using old_attempts
+  where ja.id = old_attempts.id;
   $$
 )
 where not exists (select 1 from cron.job where jobname = 'lead-radar-operational-retention');
