@@ -1,6 +1,7 @@
 import postgres from "npm:postgres@3.4.5";
 
-const databaseUrl = Deno.env.get("TEST_DATABASE_URL") ?? Deno.env.get("LEAD_RADAR_DATABASE_URL") ?? Deno.env.get("SUPABASE_DB_URL");
+const databaseUrl = Deno.env.get("TEST_DATABASE_URL") ?? Deno.env.get("LEAD_RADAR_DATABASE_URL") ??
+  Deno.env.get("SUPABASE_DB_URL");
 if (!databaseUrl) {
   throw new Error("Set TEST_DATABASE_URL or LEAD_RADAR_DATABASE_URL");
 }

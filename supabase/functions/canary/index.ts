@@ -119,7 +119,9 @@ async function queueChecks(sql: Sql): Promise<Record<string, CheckStatus>> {
     },
     queue_ambiguous: {
       ok: ambiguous === 0,
-      detail: ambiguous === 0 ? "no ambiguous deliveries" : `${ambiguous} uncertain Discord delivery(ies) require inspection`,
+      detail: ambiguous === 0
+        ? "no ambiguous deliveries"
+        : `${ambiguous} uncertain Discord delivery(ies) require inspection`,
     },
   };
 }
