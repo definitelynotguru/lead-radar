@@ -182,8 +182,8 @@ serveEntrypoint(async (request) => {
           detail: env.discordWebhookUrl ? "configured" : "missing",
         },
         heartbeat_configured: {
-          ok: Boolean(env.healthchecksPingUrl),
-          detail: env.healthchecksPingUrl ? "configured" : "missing",
+          ok: Boolean(env.healthchecksPingUrl || env.healthchecksCanaryPingUrl),
+          detail: env.healthchecksPingUrl || env.healthchecksCanaryPingUrl ? "configured" : "missing",
         },
         ...parserChecks(),
         ...await freshnessChecks(sql),
