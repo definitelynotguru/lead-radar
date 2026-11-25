@@ -166,6 +166,32 @@ Deno.test("Postgres queue semantics survive duplicates, retries, crashes, and ou
       `;
       assertEquals(requeued[0].status, "pending");
       assertEquals(requeued[0].attempts, 0);
+
+      const reclaimed = await sql<Array<{ id: string; attempts: number }>>`
+        select id, attempts from claim_due_jobs('recovery-worker', 10, 120)
+      `;
+      assertEquals(reclaimed[0]?.id, jobId);
+      assertEquals(reclaimed[0]?.attempts, 1);
+      await sql`
+        select complete_job(
+          ${jobId}::uuid,
+          'recovery-worker',
+          'success',
+          null::text,
+          204,
+          9,
+          null::timestamptz
+        )
+      `;
+
+      const attemptRows = await sql<Array<{ attempt_number: number; status: string }>>`
+        select attempt_number, status
+        from job_attempts
+        where job_id = ${jobId}::uuid
+        order by attempt_number
+      `;
+      assertEquals(attemptRows.map((row) => row.attempt_number), [1, 2]);
+      assertEquals(attemptRows.map((row) => row.status), ["ambiguous", "success"]);
     });
 
     await t.step("application actions upsert one application and preserve outcome history", async () => {

@@ -390,6 +390,7 @@ language plpgsql
 as $$
 declare
   v_job jobs%rowtype;
+  v_attempt_number integer;
   v_count integer := 0;
 begin
   for v_job in
@@ -399,6 +400,11 @@ begin
       and lease_expires_at < now()
     for update skip locked
   loop
+    select coalesce(max(attempt_number), 0) + 1
+    into v_attempt_number
+    from job_attempts
+    where job_id = v_job.id;
+
     insert into job_attempts (
       job_id,
       attempt_number,
@@ -407,7 +413,7 @@ begin
       worker_id
     ) values (
       v_job.id,
-      v_job.attempts,
+      v_attempt_number,
       'ambiguous',
       p_reason,
       v_job.lease_owner
@@ -478,6 +484,7 @@ declare
   v_result jobs%rowtype;
   v_final_status job_status;
   v_reason text;
+  v_attempt_number integer;
 begin
   if p_outcome not in ('success', 'retryable_failure', 'permanent_failure', 'ambiguous') then
     raise exception 'invalid job outcome: %', p_outcome;
@@ -496,6 +503,11 @@ begin
     raise exception 'job % is not claimed by worker %', p_job_id, p_worker_id;
   end if;
 
+  select coalesce(max(attempt_number), 0) + 1
+  into v_attempt_number
+  from job_attempts
+  where job_id = p_job_id;
+
   insert into job_attempts (
     job_id,
     attempt_number,
@@ -506,7 +518,7 @@ begin
     worker_id
   ) values (
     p_job_id,
-    v_job.attempts,
+    v_attempt_number,
     p_outcome,
     nullif(p_error, ''),
     p_response_status,
