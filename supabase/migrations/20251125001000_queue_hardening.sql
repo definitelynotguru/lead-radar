@@ -221,7 +221,7 @@ begin
       last_error = null,
       completed_at = null
   where id = p_job_id
-    and status in ('failed', 'ambiguous', 'dead_lettered', 'cancelled')
+    and status in ('failed', 'ambiguous', 'dead_lettered')
   returning * into v_result;
 
   if not found then

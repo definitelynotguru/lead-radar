@@ -1,4 +1,4 @@
-import { assert, assertEquals } from "jsr:@std/assert@1";
+import { assert, assertEquals, assertRejects } from "jsr:@std/assert@1";
 import { createDatabase, type Sql } from "../../supabase/functions/_shared/db.ts";
 
 const databaseUrl = Deno.env.get("TEST_DATABASE_URL");
@@ -227,6 +227,16 @@ Deno.test("Postgres queue semantics survive duplicates, retries, crashes, and ou
         select count(*)::integer as count from job_attempts where job_id = ${jobId}::uuid
       `;
       assertEquals(attemptCount[0].count, 1);
+      await assertRejects(
+        () => sql`select requeue_job(${jobId}::uuid, 0, true)`,
+        Error,
+        "not requeueable",
+      );
+
+      const finalRows = await sql<Array<{ status: string }>>`
+        select status::text from jobs where id = ${jobId}::uuid
+      `;
+      assertEquals(finalRows[0].status, "cancelled");
     });
 
     await t.step("application actions upsert one application and preserve outcome history", async () => {
